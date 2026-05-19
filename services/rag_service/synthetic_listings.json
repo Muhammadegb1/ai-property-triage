@@ -1,0 +1,202 @@
+[
+  {
+    "id": "listing_001",
+    "title": "Modern 3BR Apartment in Tel Aviv",
+    "description": "Bright 3-bedroom apartment on the 5th floor with a large balcony overlooking the city. Renovated kitchen with granite countertops, two full bathrooms, and a covered parking spot. Located 10 minutes from the beach and close to public transport.",
+    "property_type": "apartment",
+    "location": "Tel Aviv",
+    "price": 2500000,
+    "num_rooms": 3,
+    "key_features": ["balcony", "parking", "renovated kitchen", "close to beach"]
+  },
+  {
+    "id": "listing_002",
+    "title": "Renovated 2BR Near the Sea in Herzliya",
+    "description": "Fully renovated 2-bedroom apartment 200 meters from the beach. New flooring throughout, modern open-plan kitchen, and a sunny balcony. Building has an elevator and storage room. Ideal for couples or small families.",
+    "property_type": "apartment",
+    "location": "Herzliya",
+    "price": 1950000,
+    "num_rooms": 2,
+    "key_features": ["near beach", "renovated", "elevator", "balcony", "storage"]
+  },
+  {
+    "id": "listing_003",
+    "title": "Spacious Family Home with Garden in Ra'anana",
+    "description": "4-bedroom detached house with a 300 sqm private garden and double garage. Large living room with high ceilings, fully equipped kitchen, and a master bedroom with en-suite bathroom. Quiet residential street, close to schools and parks.",
+    "property_type": "house",
+    "location": "Ra'anana",
+    "price": 4200000,
+    "num_rooms": 4,
+    "key_features": ["garden", "garage", "quiet street", "near schools", "high ceilings"]
+  },
+  {
+    "id": "listing_004",
+    "title": "Luxury Penthouse with Sea View in Netanya",
+    "description": "Stunning penthouse apartment on the 18th floor with panoramic sea views. 5 bedrooms, 3 bathrooms, private rooftop terrace, and two parking spaces. Floor-to-ceiling windows, designer kitchen, and smart home system throughout.",
+    "property_type": "apartment",
+    "location": "Netanya",
+    "price": 7500000,
+    "num_rooms": 5,
+    "key_features": ["sea view", "rooftop terrace", "smart home", "luxury finishes", "2 parking spaces"]
+  },
+  {
+    "id": "listing_005",
+    "title": "Studio Apartment in Central Jerusalem",
+    "description": "Compact and well-maintained studio apartment in the heart of Jerusalem. Open-plan living and sleeping area, kitchenette, and a full bathroom. Walking distance to the Old City, restaurants, and public transport. Suitable for students or young professionals.",
+    "property_type": "apartment",
+    "location": "Jerusalem",
+    "price": 850000,
+    "num_rooms": 1,
+    "key_features": ["central location", "close to Old City", "public transport", "affordable"]
+  },
+  {
+    "id": "listing_006",
+    "title": "Commercial Office Space in Tel Aviv Business District",
+    "description": "200 sqm open-plan office space on the 8th floor of a Class A office building. Includes 4 private meeting rooms, kitchenette, and 3 parking spaces. 24/7 security, reception service, and fiber internet infrastructure. Ideal for tech or finance companies.",
+    "property_type": "office",
+    "location": "Tel Aviv",
+    "price": 0,
+    "num_rooms": 0,
+    "key_features": ["open plan", "meeting rooms", "parking", "24/7 security", "fiber internet"]
+  },
+  {
+    "id": "listing_007",
+    "title": "Retail Shop with Street Frontage in Haifa",
+    "description": "80 sqm ground-floor retail unit on a busy commercial street in central Haifa. Large display windows, high foot traffic, storage room at the back, and a staff bathroom. Previously used as a clothing boutique. Available for immediate occupation.",
+    "property_type": "retail",
+    "location": "Haifa",
+    "price": 0,
+    "num_rooms": 0,
+    "key_features": ["street frontage", "high foot traffic", "display windows", "storage", "ground floor"]
+  },
+  {
+    "id": "listing_008",
+    "title": "4BR Villa with Pool in Herzliya Pituach",
+    "description": "Elegant 4-bedroom villa in the prestigious Herzliya Pituach neighborhood. Private swimming pool, landscaped garden, and a double garage. Open kitchen connected to a large dining area, guest bedroom with en-suite, and a home office. Walking distance to the beach.",
+    "property_type": "villa",
+    "location": "Herzliya Pituach",
+    "price": 9500000,
+    "num_rooms": 4,
+    "key_features": ["swimming pool", "landscaped garden", "garage", "home office", "near beach"]
+  },
+  {
+    "id": "listing_009",
+    "title": "New Construction 3BR in Beer Sheva",
+    "description": "Brand new 3-bedroom apartment in a newly completed building in Beer Sheva. Never lived in. Modern finishes throughout, built-in wardrobes, solar water heater, and a covered parking space. Close to Ben-Gurion University and major shopping centers.",
+    "property_type": "apartment",
+    "location": "Beer Sheva",
+    "price": 1200000,
+    "num_rooms": 3,
+    "key_features": ["new construction", "built-in wardrobes", "solar water heater", "parking", "near university"]
+  },
+  {
+    "id": "listing_010",
+    "title": "Ground Floor Apartment with Private Garden in Rehovot",
+    "description": "Accessible ground floor 3-bedroom apartment with a 60 sqm private garden. No stairs, suitable for elderly or mobility-impaired residents. Renovated bathroom, spacious living room, and a quiet location on a tree-lined street. Close to Weizmann Institute.",
+    "property_type": "apartment",
+    "location": "Rehovot",
+    "price": 1650000,
+    "num_rooms": 3,
+    "key_features": ["ground floor", "private garden", "accessible", "no stairs", "quiet street"]
+  },
+  {
+    "id": "listing_011",
+    "title": "Industrial Warehouse in Petah Tikva",
+    "description": "1,200 sqm industrial warehouse with 6-meter ceiling height, loading dock, and heavy-duty electric supply. Office mezzanine of 80 sqm included. Secured compound with 24-hour guard, 10 parking spaces, and direct access to the main highway.",
+    "property_type": "industrial",
+    "location": "Petah Tikva",
+    "price": 0,
+    "num_rooms": 0,
+    "key_features": ["loading dock", "high ceiling", "mezzanine office", "24h security", "highway access"]
+  },
+  {
+    "id": "listing_012",
+    "title": "Charming 2BR Cottage in Zichron Yaakov",
+    "description": "Renovated stone cottage with 2 bedrooms, exposed wooden beams, and a fireplace. Surrounded by a lush garden with fruit trees. Separate guest studio, outdoor dining area, and stunning Carmel mountain views. Perfect as a holiday home or permanent residence.",
+    "property_type": "house",
+    "location": "Zichron Yaakov",
+    "price": 2100000,
+    "num_rooms": 2,
+    "key_features": ["stone cottage", "fireplace", "garden", "mountain views", "guest studio"]
+  },
+  {
+    "id": "listing_013",
+    "title": "5BR Family Villa in Savyon",
+    "description": "Prestigious 5-bedroom villa in the exclusive Savyon neighborhood. 600 sqm living space on a 1,200 sqm plot. Heated swimming pool, wine cellar, home cinema, and a triple garage. High-end finishes throughout, gated community with landscaped common areas.",
+    "property_type": "villa",
+    "location": "Savyon",
+    "price": 18000000,
+    "num_rooms": 5,
+    "key_features": ["heated pool", "wine cellar", "home cinema", "triple garage", "gated community"]
+  },
+  {
+    "id": "listing_014",
+    "title": "1BR Apartment Near Dizengoff Center in Tel Aviv",
+    "description": "Well-maintained 1-bedroom apartment on the 3rd floor of a quiet building near Dizengoff Center. Fully furnished option available. Air conditioning throughout, small balcony, and a renovated bathroom. Walking distance to cafes, restaurants, and the beach.",
+    "property_type": "apartment",
+    "location": "Tel Aviv",
+    "price": 1450000,
+    "num_rooms": 1,
+    "key_features": ["furnished option", "air conditioning", "balcony", "central location", "near beach"]
+  },
+  {
+    "id": "listing_015",
+    "title": "Office Floor in Ramat Gan Diamond Exchange",
+    "description": "350 sqm full floor office in the Diamond Exchange district of Ramat Gan. Divided into 8 private offices, conference room, reception, and kitchenette. Underground parking for 4 cars, prestigious address, and proximity to Ayalon Highway.",
+    "property_type": "office",
+    "location": "Ramat Gan",
+    "price": 0,
+    "num_rooms": 0,
+    "key_features": ["Diamond Exchange district", "private offices", "conference room", "underground parking", "highway access"]
+  },
+  {
+    "id": "listing_016",
+    "title": "3BR Apartment with Sea View in Ashdod",
+    "description": "Bright 3-bedroom apartment on the 10th floor with unobstructed sea views. Master bedroom with en-suite, open kitchen with island, large living room, and a wraparound balcony. Two parking spaces, storage room, and building gym included.",
+    "property_type": "apartment",
+    "location": "Ashdod",
+    "price": 1800000,
+    "num_rooms": 3,
+    "key_features": ["sea view", "wraparound balcony", "building gym", "2 parking spaces", "storage"]
+  },
+  {
+    "id": "listing_017",
+    "title": "Townhouse in Modi'in",
+    "description": "Modern 4-bedroom townhouse in a sought-after Modi'in neighborhood. Three levels, private entrance, rooftop terrace with barbecue area, and a small front garden. Energy-efficient construction with solar panels, electric vehicle charging point, and smart home features.",
+    "property_type": "house",
+    "location": "Modi'in",
+    "price": 3400000,
+    "num_rooms": 4,
+    "key_features": ["rooftop terrace", "solar panels", "EV charging", "smart home", "private entrance"]
+  },
+  {
+    "id": "listing_018",
+    "title": "Restaurant Space in Jaffa Port Area",
+    "description": "120 sqm commercial space in the vibrant Jaffa Port area. Previously operated as a restaurant with full kitchen infrastructure in place. High ceilings, exposed stone walls, outdoor seating area for 30 covers, and strong tourist foot traffic year-round.",
+    "property_type": "retail",
+    "location": "Jaffa",
+    "price": 0,
+    "num_rooms": 0,
+    "key_features": ["restaurant infrastructure", "outdoor seating", "exposed stone", "tourist area", "high foot traffic"]
+  },
+  {
+    "id": "listing_019",
+    "title": "2BR Apartment in Eilat with Pool Access",
+    "description": "Holiday apartment in a gated complex in Eilat. 2 bedrooms, 2 bathrooms, and a large terrace with Red Sea views. Complex includes a swimming pool, gym, and 24-hour security. Fully furnished and generating rental income. Ideal investment property.",
+    "property_type": "apartment",
+    "location": "Eilat",
+    "price": 1600000,
+    "num_rooms": 2,
+    "key_features": ["sea view", "pool access", "furnished", "rental income", "gated complex"]
+  },
+  {
+    "id": "listing_020",
+    "title": "Affordable 3BR in Afula City Center",
+    "description": "Spacious 3-bedroom apartment in central Afula. Recently painted, parquet flooring, large storage room, and a sunny balcony. Close to market, schools, and public transport. Parking available in the building. Suitable for families looking for value.",
+    "property_type": "apartment",
+    "location": "Afula",
+    "price": 680000,
+    "num_rooms": 3,
+    "key_features": ["affordable", "central location", "storage", "balcony", "parking"]
+  }
+]

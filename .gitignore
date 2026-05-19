@@ -16,3 +16,10 @@ docs/
 CLAUDE.md
 plan.md
 .claude/
+
+# Large binary files
+*.gguf
+*.pth
+
+# Generated at runtime
+services/rag_service/chroma_db/
