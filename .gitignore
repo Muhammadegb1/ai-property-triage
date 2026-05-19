@@ -1,14 +1,18 @@
-# Virtual environment
-.venv/
+# Python
 __pycache__/
 *.pyc
+.venv/
+venv/
 
-# Secrets
+# IDE
+.idea/
+.vscode/
+
+# Environment
 .env
 
 # Project planning and internal docs — not for GitHub
 docs/
 CLAUDE.md
+plan.md
 .claude/
-
-# Large binary files — added per step as they appear
