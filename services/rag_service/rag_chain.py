@@ -1,8 +1,11 @@
+import threading
+
 import huggingface_hub
 from langchain_core.prompts import PromptTemplate
 from langchain_community.llms import LlamaCpp
 
 _llm = None
+_llm_lock = threading.Lock()
 
 
 def get_llm() -> LlamaCpp:
@@ -20,7 +23,7 @@ def get_llm() -> LlamaCpp:
             temperature=0.2,
             max_tokens=200,
             verbose=False,
-            stop=["Note:", "Best regards", "Here is", "I hope","Lastly","Finally", "\n\n\n", "\n\n"],
+            stop=["Note:", "Best regards", "Here is", "I hope", "Lastly", "Finally", "\n\n\n", "\n\n"],
         )
         print("Llama model loaded.")
     return _llm
@@ -30,15 +33,16 @@ PROMPT_VERSION = "v4"
 
 RAG_PROMPT = PromptTemplate(
     input_variables=["query", "listings"],
-    template="""You are a real estate analyst. A new property listing was submitted, and 3 similar listings were retrieved from the agency archive.
+    template="""You are a real estate analyst.
 
-Write a 3-sentence insight comparing the new listing to the retrieved listings.
+Use the retrieved listings to write a short comparison.
 
 Rules:
-- Cite at least one retrieved listing using its exact ID in square brackets, e.g. [LST-004].
-- Use only facts present in the retrieved listings. Do not invent prices, sizes, features, or yields.
-- Do not speculate about market value, demand, pricing competitiveness, or buyers.
-- Stop after the third sentence.
+- Write 3 sentences.
+- Each sentence must reference at least one listing ID like [LST-001].
+- Only use information that appears in the listings.
+- If something is not mentioned, do not assume it.
+- Keep it factual and simple (no marketing language).
 
 New listing:
 {query}
@@ -46,8 +50,14 @@ New listing:
 Retrieved listings:
 {listings}
 
-INSIGHT:"""
+Insight:"""
 )
+
+
+def _trim_to_sentences(text: str, max_sentences: int = 4) -> str:
+    import re
+    parts = re.split(r'(?<=[.!?])\s+', text.strip())
+    return " ".join(parts[:max_sentences])
 
 
 def generate_insight(query: str, retrieved_listings: list[dict]) -> str:
@@ -61,5 +71,69 @@ def generate_insight(query: str, retrieved_listings: list[dict]) -> str:
         )
 
     chain = RAG_PROMPT | get_llm()
-    insight = chain.invoke({"query": query, "listings": listings_text})
-    return insight.strip()
+    with _llm_lock:
+        insight = chain.invoke({"query": query, "listings": listings_text})
+    return _trim_to_sentences(insight.strip(), max_sentences=4)
+
+
+
+# RAG_PROMPT = PromptTemplate(
+#     input_variables=["query", "listings"],
+#     template="""You are a real estate analyst. A new property listing was submitted, and 3 similar listings were retrieved from the agency archive.
+
+# Write a 3-sentence insight comparing the new listing to the retrieved listings.
+
+# Rules:
+# - Cite at least one retrieved listing using its exact ID in square brackets, e.g. [LST-004].
+# - Use only facts present in the retrieved listings. Do not invent prices, sizes, features, or yields.
+# - Do not speculate about market value, demand, pricing competitiveness, or buyers.
+# - Stop after the third sentence.
+# - Only compare numeric attributes if explicitly present
+
+# New listing:
+# {query}
+
+# Retrieved listings:
+# {listings}
+
+# INSIGHT:"""
+# )
+
+
+
+
+# RAG_PROMPT = PromptTemplate(
+#     input_variables=["query", "listings"],
+#     template="""You are a strict real estate analysis system.
+
+# You MUST follow all rules exactly. Do not add any extra commentary.
+
+# TASK:
+# Write EXACTLY 3 sentences only.
+
+# Each sentence must be one of the following:
+# 1. Comparison to [one retrieved listing]
+# 2. Comparison to another retrieved listing
+# 3. Neutral summary based ONLY on retrieved listings
+
+# STRICT RULES:
+# - Do NOT use marketing language (e.g. "attractive", "ideal", "best option")
+# - Do NOT evaluate value or desirability
+# - Do NOT speculate or infer missing attributes
+# - If a fact is not explicitly in the listings, treat it as UNKNOWN
+# - Only compare numeric attributes if explicitly present
+# - Do NOT add conclusion sentences like "overall", "in summary", etc.
+
+# OUTPUT FORMAT:
+# Sentence 1:
+# Sentence 2:
+# Sentence 3:
+
+# New listing:
+# {query}
+
+# Retrieved listings:
+# {listings}
+
+# INSIGHT:"""
+# )
