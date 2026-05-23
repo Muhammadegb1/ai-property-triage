@@ -12,7 +12,13 @@ def test_rag_chain():
     collection = client.get_collection(name="property_listings")
 
     embedder = SentenceTransformer("all-MiniLM-L6-v2")
-    query = "Well-maintained 4-bedroom villa with garden and pool"
+    query = (
+        "Renovated 2-bedroom apartment in Netanya, 78 sqm, updated kitchen and bathroom, "
+        "parking in building basement. 5-minute walk to the beachfront promenade. "
+        "Asking price: 1,950,000 ILS."
+    )
+    # Well-maintained 4-bedroom villa with garden and pool
+    # Renovated 2-bedroom apartment with parking near the beach
     embedding = embedder.encode(query).tolist()
 
     results = collection.query(query_embeddings=[embedding], n_results=3)

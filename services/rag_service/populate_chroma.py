@@ -11,29 +11,32 @@ def populate():
     with open(LISTINGS_FILE, "r", encoding="utf-8") as f:
         listings = json.load(f)
 
-    print(f"Loading embedding model...")
+    print("Loading embedding model...")
     embedder = SentenceTransformer("all-MiniLM-L6-v2")
 
     client = chromadb.PersistentClient(path=CHROMA_DIR)
-    collection = client.get_or_create_collection(name="property_listings")
+
+    try:
+        client.delete_collection(name="property_listings")
+        print("Deleted existing collection.")
+    except Exception:
+        pass
+
+    collection = client.create_collection(name="property_listings")
 
     ids = []
     documents = []
     metadatas = []
 
     for listing in listings:
-        if not listing.get("description"):
-            print(f"Skipping {listing['id']} — empty description")
+        if not listing.get("text"):
+            print(f"Skipping {listing['listing_id']} — empty text")
             continue
-        ids.append(listing["id"])
-        documents.append(listing["description"])
+        ids.append(listing["listing_id"])
+        documents.append(listing["text"])
         metadatas.append({
             "title": listing["title"],
             "property_type": listing["property_type"],
-            "location": listing["location"],
-            "price": listing["price"],
-            "num_rooms": listing["num_rooms"],
-            "key_features": ", ".join(listing["key_features"]),
         })
 
     embeddings = embedder.encode(documents).tolist()

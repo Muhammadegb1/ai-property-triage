@@ -16,26 +16,35 @@ def get_llm() -> LlamaCpp:
         _llm = LlamaCpp(
             model_path=model_path,
             n_ctx=2048,
-            n_threads=6,
+            n_threads=4,
             temperature=0.2,
             max_tokens=200,
             verbose=False,
-            stop=["Note:", "Best regards", "Here is", "I hope", "\n\n\n"],
+            stop=["Note:", "Best regards", "Here is", "I hope","Lastly","Finally", "\n\n\n", "\n\n"],
         )
         print("Llama model loaded.")
     return _llm
 
 
+PROMPT_VERSION = "v4"
+
 RAG_PROMPT = PromptTemplate(
     input_variables=["query", "listings"],
-    template="""You are a real estate analyst. Below are 3 similar past listings from our database.
+    template="""You are a real estate analyst. A new property listing was submitted, and 3 similar listings were retrieved from the agency archive.
 
-RETRIEVED LISTINGS:
-{listings}
-NEW LISTING QUERY:
+Write a 3-sentence insight comparing the new listing to the retrieved listings.
+
+Rules:
+- Cite at least one retrieved listing using its exact ID in square brackets, e.g. [LST-004].
+- Use only facts present in the retrieved listings. Do not invent prices, sizes, features, or yields.
+- Do not speculate about market value, demand, pricing competitiveness, or buyers.
+- Stop after the third sentence.
+
+New listing:
 {query}
 
-Write exactly 2 to 4 sentences. Cite at least one listing ID in square brackets like [listing_001]. Use only facts from the listings above. Do not add notes or sign-offs.
+Retrieved listings:
+{listings}
 
 INSIGHT:"""
 )
@@ -47,10 +56,8 @@ def generate_insight(query: str, retrieved_listings: list[dict]) -> str:
         meta = item["metadata"]
         listings_text += (
             f"[{item['id']}] {meta['title']}\n"
-            f"Location: {meta['location']} | Type: {meta['property_type']} | "
-            f"Price: {meta['price']} | Rooms: {meta['num_rooms']}\n"
-            f"Features: {meta['key_features']}\n"
-            f"Description: {item['document']}\n\n"
+            f"Type: {meta['property_type']}\n"
+            f"Details: {item['document']}\n\n"
         )
 
     chain = RAG_PROMPT | get_llm()
