@@ -21,5 +21,8 @@ plan.md
 *.gguf
 *.pth
 
+# Dataset images — too large for git
+services/image_analyser/data/raw/
+
 # Generated at runtime
 services/rag_service/chroma_db/
