@@ -22,7 +22,6 @@ def accuracy(logits, targets):
 
 
 def make_balanced_sampler(train_ds):
-    # Read condition scores directly from labels.csv — faster than loading images
     csv_path = os.path.join(DATA_DIR, "labels.csv")
     filepath_to_cond = {}
     with open(csv_path, newline="", encoding="utf-8") as f:
@@ -94,8 +93,8 @@ def main():
         filter(lambda p: p.requires_grad, model.parameters()), lr=LR
     )
 
-    best_val_room_acc       = 0.0
-    best_epoch              = 0
+    best_val_room_acc        = 0.0
+    best_epoch               = 0
     epochs_since_improvement = 0
 
     for epoch in range(1, EPOCHS + 1):
@@ -121,11 +120,11 @@ def main():
         )
 
         if epochs_since_improvement >= EARLY_STOP_PATIENCE:
-            print(f"\nEarly stopping at epoch {epoch} — no improvement for {EARLY_STOP_PATIENCE} epochs.")
+            print(f"\nEarly stopping at epoch {epoch} (no improvement for {EARLY_STOP_PATIENCE} epochs).")
             break
 
     if best_val_room_acc < 0.55:
-        print("\nVal accuracy below 55% — unfreezing last backbone block...")
+        print("\nVal accuracy below 55% -- unfreezing last backbone block...")
         for param in model.features[-1].parameters():
             param.requires_grad = True
         optimizer = torch.optim.Adam(
@@ -165,7 +164,7 @@ def main():
 
     with open(os.path.join(CHECKPOINTS_DIR, "training_report.txt"), "w") as f:
         f.write(report)
-    print(f"Report saved to checkpoints/training_report.txt")
+    print("Report saved to checkpoints/training_report.txt")
 
 
 if __name__ == "__main__":

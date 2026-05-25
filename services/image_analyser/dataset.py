@@ -59,24 +59,18 @@ class PropertyImageDataset(Dataset):
         return img, room_idx, cond_idx
 
 
-def load_splits(val_ratio: float = 0.15):
-    import random
+def load_splits():
     csv_path = os.path.join(DATA_DIR, "labels.csv")
 
-    train_rows, test_rows = [], []
+    train_rows, val_rows, test_rows = [], [], []
     with open(csv_path, newline="", encoding="utf-8") as f:
         for r in csv.DictReader(f):
             if r["split"] == "train":
                 train_rows.append(r)
+            elif r["split"] == "val":
+                val_rows.append(r)
             else:
                 test_rows.append(r)
-
-    # Carve validation set from train
-    random.seed(42)
-    random.shuffle(train_rows)
-    n_val = int(len(train_rows) * val_ratio)
-    val_rows   = train_rows[:n_val]
-    train_rows = train_rows[n_val:]
 
     print(f"Split: train={len(train_rows)}  val={len(val_rows)}  test={len(test_rows)}")
 

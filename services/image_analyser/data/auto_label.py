@@ -41,6 +41,7 @@ def main():
     rows = []
     with open(LABELS_CSV, newline="", encoding="utf-8") as f:
         rows = list(csv.DictReader(f))
+        fieldnames = list(rows[0].keys())
 
     to_score = [r for r in rows if int(r["condition_score"]) == 0]
     print(f"Images to auto-label: {len(to_score)}")
@@ -69,7 +70,6 @@ def main():
     for r, q in zip(to_score, qs):
         r["condition_score"] = score_from_quality(q)
 
-    fieldnames = list(rows[0].keys())
     with open(LABELS_CSV, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()

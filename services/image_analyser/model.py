@@ -2,9 +2,9 @@ import torch
 import torch.nn as nn
 from torchvision.models import efficientnet_b0, EfficientNet_B0_Weights
 
-NUM_ROOM_TYPES = 8
+NUM_ROOM_TYPES       = 8
 NUM_CONDITION_SCORES = 5
-FEATURE_DIM = 1280  # EfficientNet-B0 output features
+FEATURE_DIM          = 1280  # EfficientNet-B0 output features
 
 
 class PropertyImageModel(nn.Module):
@@ -15,12 +15,12 @@ class PropertyImageModel(nn.Module):
 
         # Frozen backbone
         self.features = base.features
-        self.avgpool = base.avgpool
+        self.avgpool  = base.avgpool
         for param in self.features.parameters():
             param.requires_grad = False
 
         # Dual heads — trained from scratch
-        self.room_head = nn.Linear(FEATURE_DIM, NUM_ROOM_TYPES)
+        self.room_head      = nn.Linear(FEATURE_DIM, NUM_ROOM_TYPES)
         self.condition_head = nn.Linear(FEATURE_DIM, NUM_CONDITION_SCORES)
 
     def forward(self, x):
