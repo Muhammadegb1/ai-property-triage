@@ -20,6 +20,7 @@ plan.md
 # Large binary files
 *.gguf
 *.pth
+!services/image_analyser/checkpoints/best_model.pth
 
 # Dataset images — too large for git
 services/image_analyser/data/raw/

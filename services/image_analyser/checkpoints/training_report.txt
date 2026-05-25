@@ -1,0 +1,7 @@
+
+==================================================
+Best checkpoint: epoch 7
+=== Final Test Set Results ===
+Room Type Accuracy : 89.4%
+Condition Accuracy : 49.7%
+==================================================
