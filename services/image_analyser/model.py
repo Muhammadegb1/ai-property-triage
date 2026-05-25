@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from torchvision.models import efficientnet_b0, EfficientNet_B0_Weights
 
-NUM_ROOM_TYPES = 6
+NUM_ROOM_TYPES = 8
 NUM_CONDITION_SCORES = 5
 FEATURE_DIM = 1280  # EfficientNet-B0 output features
 

@@ -1,6 +1,5 @@
 import os
 import csv
-import random
 from PIL import Image, ImageOps
 from torch.utils.data import Dataset
 from torchvision import transforms
@@ -8,7 +7,10 @@ from torchvision import transforms
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 RAW_DIR  = os.path.join(DATA_DIR, "raw")
 
-ROOM_TYPES  = ["kitchen", "bathroom", "living_room", "bedroom", "exterior", "other"]
+ROOM_TYPES  = [
+    "balcony", "bathroom", "bedroom", "building_exterior",
+    "garden", "kitchen_dining", "living_room", "not_real_estate",
+]
 ROOM_TO_IDX = {r: i for i, r in enumerate(ROOM_TYPES)}
 
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
@@ -45,35 +47,36 @@ class PropertyImageDataset(Dataset):
         img_path = os.path.join(RAW_DIR, row["filepath"])
 
         img = Image.open(img_path)
-        img = ImageOps.exif_transpose(img)  # fix rotation from camera metadata
+        img = ImageOps.exif_transpose(img)
         img = img.convert("RGB")
 
         if self.transform:
             img = self.transform(img)
 
         room_idx = ROOM_TO_IDX[row["room_type"]]
-        cond_idx = int(row["condition_score"]) - 1  # score 1-5 -> index 0-4
+        cond_idx = int(row["condition_score"]) - 1  # 1-5 → 0-4
 
         return img, room_idx, cond_idx
 
 
-def load_splits(val_ratio: float = 0.15, test_ratio: float = 0.10):
+def load_splits(val_ratio: float = 0.15):
+    import random
     csv_path = os.path.join(DATA_DIR, "labels.csv")
-    rows = []
+
+    train_rows, test_rows = [], []
     with open(csv_path, newline="", encoding="utf-8") as f:
         for r in csv.DictReader(f):
-            rows.append(r)
+            if r["split"] == "train":
+                train_rows.append(r)
+            else:
+                test_rows.append(r)
 
+    # Carve validation set from train
     random.seed(42)
-    random.shuffle(rows)
-
-    n      = len(rows)
-    n_test = int(n * test_ratio)
-    n_val  = int(n * val_ratio)
-
-    test_rows  = rows[:n_test]
-    val_rows   = rows[n_test:n_test + n_val]
-    train_rows = rows[n_test + n_val:]
+    random.shuffle(train_rows)
+    n_val = int(len(train_rows) * val_ratio)
+    val_rows   = train_rows[:n_val]
+    train_rows = train_rows[n_val:]
 
     print(f"Split: train={len(train_rows)}  val={len(val_rows)}  test={len(test_rows)}")
 
