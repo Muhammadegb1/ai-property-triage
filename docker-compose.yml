@@ -1,0 +1,32 @@
+services:
+  rag_service:
+    build: ./services/rag_service
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./services/rag_service/chroma_db:/app/chroma_db
+    env_file: .env
+
+  image_analyser:
+    build: ./services/image_analyser
+    ports:
+      - "8002:8002"
+    env_file: .env
+
+  guardrails_service:
+    build: ./services/guardrails_service
+    ports:
+      - "8003:8003"
+    env_file: .env
+
+  langgraph_agent:
+    build: ./services/langgraph_agent
+    ports:
+      - "8004:8004"
+    env_file: .env
+    environment:
+      - RAG_SERVICE_URL=http://rag_service:8001
+      - IMAGE_ANALYSER_URL=http://image_analyser:8002
+    depends_on:
+      - rag_service
+      - image_analyser
