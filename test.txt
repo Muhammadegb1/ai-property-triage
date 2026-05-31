@@ -1,0 +1,28 @@
+
+
+
+
+
+Invoke-WebRequest -Uri http://localhost:8002/analyse -Method POST -ContentType "application/json" -Body '{"image_url": "https://img.yad2.co.il/Pic/202601/28/2_5/o/y2_7_poBGM9NJQE_20260128.jpg?c=6"}'   
+
+
+
+
+
+guardrails_service:
+uvicorn services.guardrails_service.main:app --port 8003
+$body = '{"text": "3-bedroom apartment with parking in Tel Aviv, asking 2.5M NIS"}'
+Invoke-RestMethod -Uri http://localhost:8003/check/input -Method Post -Body $body -ContentType "application/json"
+
+# Valid listing
+$body = '{"text": "דירת 3 חדרים בתל אביב עם חניה, מחיר 2.5 מיליון שקל"}'
+Invoke-RestMethod -Uri http://localhost:8003/check/input -Method Post -Body $body -ContentType "application/json"
+
+Input check — should FAIL:
+# Spam
+$body = '{"text": "Buy Bitcoin now, guaranteed 10x returns!"}'
+Invoke-RestMethod -Uri http://localhost:8003/check/input -Method Post -Body $body -ContentType "application/json"
+
+# Off-topic
+$body = '{"text": "How do I make pasta carbonara?"}'
+Invoke-RestMethod -Uri http://localhost:8003/check/input -Method Post -Body $body -ContentType "application/json"

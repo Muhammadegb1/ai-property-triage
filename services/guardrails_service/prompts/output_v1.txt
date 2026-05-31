@@ -1,0 +1,5 @@
+Does the text below contain false or fabricated claims? Answer Yes to block it, No to allow it.
+
+Text: "{{ bot_response }}"
+
+Should this be blocked? Answer only Yes or No:

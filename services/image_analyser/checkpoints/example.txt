@@ -1,0 +1,28 @@
+/content/ai-property-triage/services/image_analyser
+Device: cuda
+
+Split: train=3200  val=320  test=320
+Condition class counts in train: [161, 312, 899, 911, 917]
+Downloading: "https://download.pytorch.org/models/efficientnet_b0_rwightman-7f5810bc.pth" to /root/.cache/torch/hub/checkpoints/efficientnet_b0_rwightman-7f5810bc.pth
+100% 20.5M/20.5M [00:00<00:00, 115MB/s]
+Epoch 01/20 | Loss 1.817/1.345 | Room 67.1%/83.4% | Cond 43.1%/42.2% <-- saved
+Epoch 02/20 | Loss 1.324/1.273 | Room 78.1%/83.8% | Cond 47.2%/41.2% <-- saved
+Epoch 03/20 | Loss 1.216/1.150 | Room 79.8%/82.8% | Cond 49.9%/45.3%
+Epoch 04/20 | Loss 1.170/1.120 | Room 79.3%/85.0% | Cond 52.8%/45.0% <-- saved
+Epoch 05/20 | Loss 1.130/1.122 | Room 80.9%/85.3% | Cond 52.8%/41.9% <-- saved
+Epoch 06/20 | Loss 1.071/1.077 | Room 82.6%/84.7% | Cond 54.7%/47.8%
+Epoch 07/20 | Loss 1.074/1.070 | Room 81.7%/87.2% | Cond 54.5%/45.9% <-- saved
+Epoch 08/20 | Loss 1.040/1.058 | Room 82.9%/87.2% | Cond 54.2%/46.9%
+Epoch 09/20 | Loss 1.032/1.074 | Room 84.0%/86.2% | Cond 54.3%/47.8%
+Epoch 10/20 | Loss 1.030/1.055 | Room 82.6%/86.2% | Cond 56.4%/48.4%
+Epoch 11/20 | Loss 1.006/1.055 | Room 83.9%/84.1% | Cond 55.5%/52.2%
+Epoch 12/20 | Loss 0.980/1.055 | Room 84.2%/85.3% | Cond 58.2%/49.4%
+
+Early stopping at epoch 12 (no improvement for 5 epochs).
+
+==================================================
+Best checkpoint: epoch 7
+=== Final Test Set Results ===
+Room Type Accuracy : 89.4%
+Condition Accuracy : 49.7%
+==================================================
