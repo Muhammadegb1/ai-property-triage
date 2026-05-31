@@ -6,26 +6,40 @@ from typing import Optional
 sys.path.insert(0, os.path.dirname(__file__))
 
 import chromadb
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
+from pinecone import Pinecone
 from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
 
 from rag_chain import generate_insight, get_llm
 
+load_dotenv()
+
 CHROMA_DIR = os.path.join(os.path.dirname(__file__), "chroma_db")
+VECTOR_STORE = os.getenv("VECTOR_STORE", "chroma")   # "chroma" or "pinecone"
 
 _embedder: Optional[SentenceTransformer] = None
-_collection = None
+_collection = None      # ChromaDB collection
+_pinecone_index = None  # Pinecone index
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global _embedder, _collection
+    global _embedder, _collection, _pinecone_index
     print("Loading embedding model...")
     _embedder = SentenceTransformer("all-MiniLM-L6-v2")
-    client = chromadb.PersistentClient(path=CHROMA_DIR)
-    _collection = client.get_collection(name="property_listings")
-    print(f"ChromaDB ready: {_collection.count()} listings")
+
+    if VECTOR_STORE == "pinecone":
+        pc = Pinecone(api_key=os.environ["PINECONE_API_KEY"])
+        _pinecone_index = pc.Index(os.environ["PINECONE_INDEX_NAME"])
+        stats = _pinecone_index.describe_index_stats()
+        print(f"Pinecone ready: {stats['total_vector_count']} listings")
+    else:
+        client = chromadb.PersistentClient(path=CHROMA_DIR)
+        _collection = client.get_collection(name="property_listings")
+        print(f"ChromaDB ready: {_collection.count()} listings")
+
     get_llm()
     yield
 
@@ -51,7 +65,7 @@ class QueryResponse(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {"status": "ok", "vector_store": VECTOR_STORE}
 
 
 @app.post("/query", response_model=QueryResponse)
@@ -60,15 +74,30 @@ def query(req: QueryRequest):
         raise HTTPException(status_code=422, detail="description must not be empty")
 
     embedding = _embedder.encode(req.description).tolist()
-    results = _collection.query(query_embeddings=[embedding], n_results=3)
 
-    retrieved = []
-    for i in range(len(results["ids"][0])):
-        retrieved.append({
-            "id": results["ids"][0][i],
-            "document": results["documents"][0][i],
-            "metadata": results["metadatas"][0][i],
-        })
+    if VECTOR_STORE == "pinecone":
+        results = _pinecone_index.query(vector=embedding, top_k=3, include_metadata=True)
+        retrieved = [
+            {
+                "id": m["id"],
+                "document": m["metadata"]["text"],
+                "metadata": {
+                    "title": m["metadata"]["title"],
+                    "property_type": m["metadata"]["property_type"],
+                },
+            }
+            for m in results["matches"]
+        ]
+    else:
+        results = _collection.query(query_embeddings=[embedding], n_results=3)
+        retrieved = [
+            {
+                "id": results["ids"][0][i],
+                "document": results["documents"][0][i],
+                "metadata": results["metadatas"][0][i],
+            }
+            for i in range(len(results["ids"][0]))
+        ]
 
     insight = generate_insight(req.description, retrieved)
 
