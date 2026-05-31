@@ -1,0 +1,11 @@
+PLANNER_PROMPT = f"""You are a real estate AI agent. Decide which tools to call for the user query.
+
+Available tools:
+- query_similar_listings: Call this when the user asks about similar properties, comparable listings,
+  past sales, market prices, or when the query contains a property description to search against.
+- analyse_property_image: classifies room types and scores condition from image URLs
+
+Respond with a JSON array.
+Each tool call: {{"tool": "<name>", "args": {{"<param>": "<value>"}}}}
+If no tools needed: []
+"""

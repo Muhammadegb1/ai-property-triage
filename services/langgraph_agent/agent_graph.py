@@ -22,21 +22,23 @@ class AgentState(TypedDict):
     tools_used: list[str]
 
 
-PLANNER_PROMPT = f"""You are a real estate AI agent. Decide which tools to call for the user query.
+PLANNER_PROMPT = f"""You are a real estate AI agent. Decide which tools to call for the user query. 
+Available tools: 
+- query_similar_listings(description: str): {TOOL_DESCRIPTIONS["query_similar_listings"]} 
+- analyse_property_image(image_url: str): {TOOL_DESCRIPTIONS["analyse_property_image"]} 
 
-Available tools:
-- query_similar_listings(description: str): {TOOL_DESCRIPTIONS["query_similar_listings"]}
-- analyse_property_image(image_url: str): {TOOL_DESCRIPTIONS["analyse_property_image"]}
+Respond ONLY with a valid JSON array of tool calls. 
+Each item must be: {{"tool": "<name>", "args": {{"<param>": "<value>"}}}} 
+If no tools are needed, respond with: [] 
 
-Respond ONLY with a valid JSON array of tool calls.
-Each item must be: {{"tool": "<name>", "args": {{"<param>": "<value>"}}}}
-If no tools are needed, respond with: []
-
-Rules:
-- Only call query_similar_listings if the query mentions a property description or asks for similar listings.
-- Only call analyse_property_image if the query contains a direct image URL (http/https ending in image extension or image path).
-- Extract arguments only from what is explicitly in the query.
-"""
+Rules: 
+- A query may require ZERO, ONE, or BOTH tools.
+- Use query_similar_listings for market/history/comparison/similar listings/ questions even if no full listing description is provided.
+  or any request asking about available, past, or comparable real estate data.
+- Use analyse_property_image whenever visual/image information is requested and a URL is present.
+- Extract arguments only from explicit query content.
+- Do NOT invent missing data.
+""" 
 
 SYNTHESISER_PROMPT = """You are a real estate AI assistant.
 Use the tool results below to answer the user query.

@@ -1,0 +1,37 @@
+PLANNER_PROMPT = f"""You are a real estate AI agent. Decide which tools to call for the user query. 
+
+Available tools: 
+- query_similar_listings(description: str): {TOOL_DESCRIPTIONS["query_similar_listings"]} 
+- analyse_property_image(image_url: str): {TOOL_DESCRIPTIONS["analyse_property_image"]} 
+
+
+Respond ONLY with a valid JSON array of tool calls. 
+Each item must be: {{"tool": "<name>", "args": {{"<param>": "<value>"}}}} 
+
+If no tools are needed, respond with: [] 
+
+Rules: 
+- A query may require ZERO, ONE, or BOTH tools.
+- Use query_similar_listings for market/history/comparison questions even if no full listing description is provided.
+- Use analyse_property_image whenever visual/image information is requested and a URL is present.
+- Extract arguments only from explicit query content.
+- Do NOT invent missing data.
+
+""" 
+
+
+TOOL_DESCRIPTIONS = {
+    "query_similar_listings": (
+        "Retrieve the 3 most similar past property listings from the agency archive "
+        "and return a short comparative insight. "
+        "Use when the query asks about comparable properties, similar past listings, "
+        "or comparisons based on a property description in text. "
+        "Input: a property description string."
+    ),
+    "analyse_property_image": (
+        "Classify a property image by room type (kitchen, bathroom, bedroom, "
+        "living room, exterior, other) and assign a condition score from 1 to 5. "
+        "Use ONLY when the query contains a direct image URL starting with http:// or https://. "
+        "Input: a URL string."
+    ),
+}

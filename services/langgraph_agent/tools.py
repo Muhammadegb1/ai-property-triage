@@ -11,16 +11,17 @@ HTTP_TIMEOUT = float(os.getenv("HTTP_TIMEOUT", "30"))
 
 TOOL_DESCRIPTIONS = {
     "query_similar_listings": (
-        "Search for similar property listings in the knowledge base. "
-        "Use this when the query asks about comparable properties, past listings, "
-        "market context, or similar real estate examples. "
+        "Retrieve the 3 most similar past property listings from the agency archive "
+        "and return a short comparative insight. "
+        "Use when the query asks about comparable properties, similar past listings, "
+        "or comparisons based on a property description in text. "
         "Input: a property description string."
     ),
     "analyse_property_image": (
-        "Classify a property image by room type and assign a condition score from 1 to 5. "
-        "Use this when the query provides an image URL and asks about the room type, "
-        "condition, or visual assessment of a property. "
-        "Input: a direct URL to an image file."
+        "Classify a property image by room type (kitchen, bathroom, bedroom, "
+        "living room, exterior, other) and assign a condition score from 1 to 5. "
+        "Use ONLY when the query contains a direct image URL starting with http:// or https://. "
+        "Input: a URL string."
     ),
 }
 
