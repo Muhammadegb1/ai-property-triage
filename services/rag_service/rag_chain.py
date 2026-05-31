@@ -1,6 +1,9 @@
+import logging
 import threading
 
 import huggingface_hub
+
+logger = logging.getLogger(__name__)
 from langchain_core.prompts import PromptTemplate
 from langchain_community.llms import LlamaCpp
 
@@ -11,7 +14,7 @@ _llm_lock = threading.Lock()
 def get_llm() -> LlamaCpp:
     global _llm
     if _llm is None:
-        print("Loading Llama model...")
+        logger.info("Loading Llama model...")
         model_path = huggingface_hub.hf_hub_download(
             repo_id="bartowski/Meta-Llama-3.1-8B-Instruct-GGUF",
             filename="Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf",
@@ -25,7 +28,7 @@ def get_llm() -> LlamaCpp:
             verbose=False,
             stop=["Note:", "Best regards", "Here is", "I hope", "Lastly", "Finally", "\n\n\n", "\n\n"],
         )
-        print("Llama model loaded.")
+        logger.info("Llama model loaded.")
     return _llm
 
 
@@ -70,10 +73,13 @@ def generate_insight(query: str, retrieved_listings: list[dict]) -> str:
             f"Details: {item['document']}\n\n"
         )
 
+    logger.info("Generating insight for query: %r", query[:80])
     chain = RAG_PROMPT | get_llm()
     with _llm_lock:
         insight = chain.invoke({"query": query, "listings": listings_text})
-    return _trim_to_sentences(insight.strip(), max_sentences=4)
+    result = _trim_to_sentences(insight.strip(), max_sentences=4)
+    logger.info("Insight generated: %d chars", len(result))
+    return result
 
 
 

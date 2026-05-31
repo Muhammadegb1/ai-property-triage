@@ -1,7 +1,11 @@
+import logging
 import os
 import sys
 from contextlib import asynccontextmanager
 from typing import Optional
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 sys.path.insert(0, os.path.dirname(__file__))
 
@@ -34,12 +38,13 @@ async def lifespan(app: FastAPI):
         pc = Pinecone(api_key=os.environ["PINECONE_API_KEY"])
         _pinecone_index = pc.Index(os.environ["PINECONE_INDEX_NAME"])
         stats = _pinecone_index.describe_index_stats()
-        print(f"Pinecone ready: {stats['total_vector_count']} listings")
+        logger.info("Pinecone ready: %d listings", stats["total_vector_count"])
     else:
         client = chromadb.PersistentClient(path=CHROMA_DIR)
         _collection = client.get_collection(name="property_listings")
-        print(f"ChromaDB ready: {_collection.count()} listings")
+        logger.info("ChromaDB ready: %d listings", _collection.count())
 
+    logger.info("Vector store: %s", VECTOR_STORE)
     get_llm()
     yield
 
@@ -73,6 +78,7 @@ def query(req: QueryRequest):
     if not req.description.strip():
         raise HTTPException(status_code=422, detail="description must not be empty")
 
+    logger.info("Query received: %r", req.description[:80])
     embedding = _embedder.encode(req.description).tolist()
 
     if VECTOR_STORE == "pinecone":
@@ -99,6 +105,7 @@ def query(req: QueryRequest):
             for i in range(len(results["ids"][0]))
         ]
 
+    logger.info("Retrieved %d listings from %s", len(retrieved), VECTOR_STORE)
     insight = generate_insight(req.description, retrieved)
 
     similar_listings = [

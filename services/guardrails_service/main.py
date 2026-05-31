@@ -1,9 +1,13 @@
+import logging
 import os
 import sys
 from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
 load_dotenv()
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 sys.path.insert(0, os.path.dirname(__file__))
 
@@ -29,7 +33,7 @@ def get_rails() -> LLMRails:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     get_rails()
-    print("Guardrails loaded.")
+    logger.info("Guardrails loaded.")
     yield
 
 
@@ -47,7 +51,9 @@ def health():
 
 @app.post("/check/input")
 async def check_input(req: CheckRequest):
+    logger.info("Input check: %r", req.text[:80])
     if not req.text.strip():
+        logger.warning("Empty input received")
         return {"pass": False, "reason": "Empty input", "safe_text": None}
     response = await get_rails().generate_async(
         messages=[{"role": "user", "content": req.text}]
@@ -55,13 +61,17 @@ async def check_input(req: CheckRequest):
     text = response.get("content", "") if isinstance(response, dict) else response
     if BLOCKED in text:
         reason = text.split(":", 1)[1].strip() if ":" in text else "Input failed guardrail check"
+        logger.info("Input BLOCKED: %s", reason)
         return {"pass": False, "reason": reason, "safe_text": None}
+    logger.info("Input PASSED")
     return {"pass": True, "reason": None, "safe_text": None}
 
 
 @app.post("/check/output")
 async def check_output(req: CheckRequest):
+    logger.info("Output check: %r", req.text[:80])
     if not req.text.strip():
+        logger.warning("Empty output received")
         return {"pass": False, "reason": "Empty text", "safe_text": None}
     rails = get_rails()
     result = await rails.check_async(
@@ -72,5 +82,7 @@ async def check_output(req: CheckRequest):
         rail_types=[RailType.OUTPUT],
     )
     if result.status == RailStatus.BLOCKED:
+        logger.info("Output BLOCKED: %s", result.rail)
         return {"pass": False, "reason": result.rail or "Output failed guardrail check", "safe_text": None}
+    logger.info("Output PASSED")
     return {"pass": True, "reason": None, "safe_text": req.text}

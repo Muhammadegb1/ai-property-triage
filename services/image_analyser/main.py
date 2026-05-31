@@ -1,7 +1,11 @@
 from contextlib import asynccontextmanager
 from io import BytesIO
+import logging
 import os
 import sys
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 sys.path.insert(0, os.path.dirname(__file__))
 
@@ -38,7 +42,7 @@ async def lifespan(app: FastAPI):
     model = PropertyImageModel().to(DEVICE)
     model.load_state_dict(torch.load(CHECKPOINT_PATH, map_location=DEVICE))
     model.eval()
-    print(f"Model loaded from {CHECKPOINT_PATH}")
+    logger.info("Model loaded from %s", CHECKPOINT_PATH)
     yield
 
 
@@ -62,13 +66,16 @@ def health():
 
 @app.post("/analyse", response_model=AnalyseResponse)
 def analyse(req: AnalyseRequest):
+    logger.info("Analyse request: %s", req.image_url)
     try:
         resp = requests.get(req.image_url, timeout=10)
         resp.raise_for_status()
         img = Image.open(BytesIO(resp.content))
     except requests.RequestException as e:
+        logger.error("Could not fetch image %s: %s", req.image_url, e)
         raise HTTPException(status_code=422, detail=f"Could not fetch image: {e}")
     except Exception:
+        logger.error("Could not decode image %s", req.image_url)
         raise HTTPException(status_code=422, detail="Could not decode image")
 
     try:
@@ -90,6 +97,7 @@ def analyse(req: AnalyseRequest):
     room_type       = "uncertain" if room_conf < CONFIDENCE_THRESHOLD else ROOM_TYPES[room_idx]
     condition_score = cond_idx + 1  # 0-4 → 1-5
 
+    logger.info("Result: room=%s score=%d confidence=%.3f", room_type, condition_score, room_conf)
     return AnalyseResponse(
         room_type=room_type,
         condition_score=condition_score,
