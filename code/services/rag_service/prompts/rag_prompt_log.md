@@ -135,26 +135,55 @@ Insight:
 **Results:**
 | Check | Score |
 |---|---|
-| Citation [LST-XXX] | ?/10 |
-| Length OK (1-5 sentences) | ?/10 |
-| No hallucination | ?/10 |
-| ALL passed | ?/10 |
+| Citation present | 9/10 |
+| Multi-citation (≥2) | 8/10 |
+| Length OK (2-5 sentences) | 10/10 |
+| No hallucination | 10/10 |
+| ALL passed | 8/10 |
+
+**Failure mode identified:**
+Two remaining failures:
+
+1. **Case 10 — Citation 0/10 (new regression):** The model writes `[LST-XXX]` literally as a placeholder instead of using real retrieved IDs. Caused by the rule saying "like [LST-XXX]" — the model treats it as a fill-in template. Result: `[LST-XXX]` does not match `\[LST-\d+\]` so zero citations are counted.
+
+2. **Case 03 — Multi-citation FAIL:** LST-003 is nearly identical to the new listing (same price, same type) so the model gets stuck comparing to it twice and ignores LST-016 and LST-006.
 
 ---
 
 ## Version 5 — Final Refinement
 
-**Failure from v4:** (fill)
+**Failure from v4:** Model uses `[LST-XXX]` as a literal placeholder; gets stuck on a single highly-similar listing.
 
-**Change:** (fill)
+**Change:**
+- Replaced "like [LST-XXX]" with "using its exact ID (e.g. [LST-001])" — eliminates placeholder confusion.
+- Added "Do not cite the same listing twice" — forces the model off a single listing.
 
-**Prompt:** (fill)
+**Prompt:**
+```
+You are a real estate analyst. Write 2-3 sentences comparing the new listing to the retrieved listings.
+
+Rules:
+- Write at least 2 sentences. Each must cite at least one retrieved listing using its exact ID (e.g. [LST-001]).
+- You MUST cite at least 2 different listing IDs from the retrieved listings. Do not cite the same listing twice.
+- Do not just describe the new listing — explain how it compares to the retrieved ones.
+- Only state facts present in the listings below. Do not invent prices, sizes, or features.
+- Use exact numbers as written in the listings.
+
+New listing:
+{query}
+
+Retrieved listings:
+{listings}
+
+Insight:
+```
 
 **Results:**
 | Check | Score |
 |---|---|
-| Citation [LST-XXX] | ?/10 |
-| Length OK (1-5 sentences) | ?/10 |
+| Citation present | ?/10 |
+| Multi-citation (≥2) | ?/10 |
+| Length OK (2-5 sentences) | ?/10 |
 | No hallucination | ?/10 |
 | ALL passed | ?/10 |
 
@@ -178,5 +207,5 @@ Insight:
 | v1 | 0/10 | 9/10 | 8/10 | 0/10 |
 | v2 | 7/10 | 10/10 | 7/10 | 4/10 |
 | v3 | 10/10 | 10/10 | 10/10 | 7/10 |
-| v4 | ?/10 | ?/10 | ?/10 | ?/10 |
+| v4 | 9/10 | 10/10 | 10/10 | 8/10 |
 | v5 | ?/10 | ?/10 | ?/10 | ?/10 |

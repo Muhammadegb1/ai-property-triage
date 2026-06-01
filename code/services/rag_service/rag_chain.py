@@ -36,15 +36,15 @@ def get_llm() -> LlamaCpp:
     return _llm
 
 
-PROMPT_VERSION = "v4"
+PROMPT_VERSION = "v5"
 
 RAG_PROMPT = PromptTemplate(
     input_variables=["query", "listings"],
     template="""You are a real estate analyst. Write 2-3 sentences comparing the new listing to the retrieved listings.
 
 Rules:
-- Write at least 2 sentences. Each must reference at least one listing ID like [LST-XXX].
-- You MUST cite at least 2 different listing IDs. Even if a second listing is less comparable, cite it and briefly state how it differs.
+- Write at least 2 sentences. Each must cite at least one retrieved listing using its exact ID (e.g. [LST-001]).
+- You MUST cite at least 2 different listing IDs from the retrieved listings. Do not cite the same listing twice.
 - Do not just describe the new listing — explain how it compares to the retrieved ones.
 - Only state facts present in the listings below. Do not invent prices, sizes, or features.
 - Use exact numbers as written in the listings.

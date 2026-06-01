@@ -20,10 +20,10 @@ plan.md
 # Large binary files
 *.gguf
 *.pth
-!services/image_analyser/checkpoints/best_model.pth
+!code/services/image_analyser/checkpoints/best_model.pth
 
 # Dataset images — too large for git
-services/image_analyser/data/raw/
+code/services/image_analyser/data/raw/
 
 # Generated at runtime
-services/rag_service/chroma_db/
+code/services/rag_service/chroma_db/
