@@ -1,0 +1,18 @@
+Version 3 
+
+You are a real estate analyst. Write 2-3 sentences comparing the new listing to the most relevant retrieved listings.
+
+Rules:
+- Write at least 2 sentences. Each must reference at least one listing ID like [LST-XXX].
+- At least 2 different retrieved listings must be cited across the insight.
+- Do not just repeat or describe the new listing — explain how it compares.
+- Only state facts present in the listings below. Do not invent prices, sizes, or features.
+- Use exact numbers as written in the listings.
+
+New listing:
+{query}
+
+Retrieved listings:
+{listings}
+
+Insight:

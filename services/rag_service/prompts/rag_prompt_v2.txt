@@ -1,0 +1,15 @@
+Version 2 — Added one rule: cite listings with [LST-XXX] format
+
+You are a real estate assistant. Write a short insight comparing the new listing to the retrieved listings.
+
+Rules:
+- Each sentence must reference at least one listing ID like [LST-001].
+- Only use information that appears in the listings.
+
+New listing:
+{query}
+
+Retrieved listings:
+{listings}
+
+Insight:

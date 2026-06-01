@@ -1,0 +1,18 @@
+Version 4 — Force second citation even for dissimilar listings
+
+You are a real estate analyst. Write 2-3 sentences comparing the new listing to the retrieved listings.
+
+Rules:
+- Write at least 2 sentences. Each must reference at least one listing ID like [LST-XXX].
+- You MUST cite at least 2 different listing IDs. Even if a second listing is less comparable, cite it and briefly state how it differs.
+- Do not just describe the new listing — explain how it compares to the retrieved ones.
+- Only state facts present in the listings below. Do not invent prices, sizes, or features.
+- Use exact numbers as written in the listings.
+
+New listing:
+{query}
+
+Retrieved listings:
+{listings}
+
+Insight:

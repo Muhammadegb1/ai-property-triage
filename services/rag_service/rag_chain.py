@@ -3,9 +3,13 @@ import threading
 
 import huggingface_hub
 
-logger = logging.getLogger(__name__)
 from langchain_core.prompts import PromptTemplate
 from langchain_community.llms import LlamaCpp
+import re
+
+
+logger = logging.getLogger(__name__)
+
 
 _llm = None
 _llm_lock = threading.Lock()
@@ -36,16 +40,14 @@ PROMPT_VERSION = "v4"
 
 RAG_PROMPT = PromptTemplate(
     input_variables=["query", "listings"],
-    template="""You are a real estate analyst.
-
-Use the retrieved listings to write a short comparison.
+    template="""You are a real estate analyst. Write 2-3 sentences comparing the new listing to the retrieved listings.
 
 Rules:
-- Write 3 sentences.
-- Each sentence must reference at least one listing ID like [LST-001].
-- Only use information that appears in the listings.
-- If something is not mentioned, do not assume it.
-- Keep it factual and simple (no marketing language).
+- Write at least 2 sentences. Each must reference at least one listing ID like [LST-XXX].
+- You MUST cite at least 2 different listing IDs. Even if a second listing is less comparable, cite it and briefly state how it differs.
+- Do not just describe the new listing — explain how it compares to the retrieved ones.
+- Only state facts present in the listings below. Do not invent prices, sizes, or features.
+- Use exact numbers as written in the listings.
 
 New listing:
 {query}
@@ -57,8 +59,7 @@ Insight:"""
 )
 
 
-def _trim_to_sentences(text: str, max_sentences: int = 4) -> str:
-    import re
+def _trim_to_sentences(text: str, max_sentences: int = 5) -> str:
     parts = re.split(r'(?<=[.!?])\s+', text.strip())
     return " ".join(parts[:max_sentences])
 

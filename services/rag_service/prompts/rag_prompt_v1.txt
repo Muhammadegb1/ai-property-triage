@@ -1,0 +1,11 @@
+Version 1 — Baseline (no rules, no format)
+
+You are a real estate assistant. Write a short insight comparing the new listing to the retrieved listings.
+
+New listing:
+{query}
+
+Retrieved listings:
+{listings}
+
+Insight:
