@@ -1,0 +1,26 @@
+[
+  {
+    "label": "Valid apartment (success)",
+    "agent_name": "Jane Cohen",
+    "description": "Bright 3-bedroom apartment in Tel Aviv Florentin, 95 sqm, renovated kitchen, parking and balcony. Asking 2,750,000 ILS. Recently painted, elevator building.",
+    "image_urls": "https://pics.example/kitchen.jpg, https://pics.example/living.jpg"
+  },
+  {
+    "label": "Input guardrail fail (spam)",
+    "agent_name": "Test Agent",
+    "description": "SPAM crypto free money click here — not a property listing, promotional scam content only.",
+    "image_urls": ""
+  },
+  {
+    "label": "Output guardrail fail (review)",
+    "agent_name": "Test Agent",
+    "description": "Modern 2-bedroom apartment in Ramat Gan, 78 sqm, close to metro. Includes balcony. Price 1,950,000 ILS. FAIL_OUTPUT legal guarantee in report demo.",
+    "image_urls": "https://pics.example/bedroom.jpg"
+  },
+  {
+    "label": "Commercial office",
+    "agent_name": "David Levy",
+    "description": "Prime office space in Ramat Gan tower, 120 sqm open plan, meeting room, 2 parking spots. Monthly rent 18,000 ILS. Suitable for tech startup.",
+    "image_urls": "https://pics.example/office_exterior.jpg"
+  }
+]
