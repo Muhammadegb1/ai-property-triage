@@ -8,60 +8,74 @@ def render_report(result: dict) -> None:
         st.info("Pipeline returned an empty response.")
         return
 
-    # --- Input guardrail rejected the listing ---
-    if result.get("status") == "rejected" or result.get("rejected"):
-        st.error(
-            f"Listing rejected: {result.get('reason', 'Input guardrail failed.')}"
-        )
+    # --- Input guardrail rejected the listing (Node 3b, HTTP 422) ---
+    if result.get("rejected"):
+        st.error(f"Listing rejected: {result.get('reason', 'Input guardrail failed.')}")
         return
 
-    # --- Output guardrail flagged for human review ---
-    if result.get("status") == "review" or result.get("human_review_required"):
+    # --- Output guardrail flagged for human review (Node 7d) ---
+    if result.get("human_review_required"):
         st.warning(
             result.get("message", "Report flagged for human review (output guardrail).")
         )
+        report = result.get("report", {})
+        if report:
+            st.markdown("### Report (pending review)")
+            _render_report_body(report, flag_reason=result.get("flag_reason"))
+        return
 
-    # --- Extract the report object (n8n may nest it or return it flat) ---
-    report = result.get("report") or result
+    # --- Success (Node 8a residential / Node 8b commercial) ---
+    if result.get("success"):
+        channel = result.get("channel", "")
+        if channel == "residential":
+            st.success("Routed to: Residential team")
+        elif channel == "commercial":
+            st.success("Routed to: Commercial team")
 
+        report = result.get("report", {})
+        _render_report_body(report)
+        return
+
+    # --- Fallback: show raw response ---
+    st.markdown("### Response")
+    st.json(result)
+
+
+def _render_report_body(report: dict, flag_reason: str | None = None) -> None:
     st.markdown("---")
     st.subheader("Triage Report")
 
-    # Routing team
-    team = result.get("team") or report.get("team")
-    if team:
-        label = "🏠 Residential" if team == "residential" else "🏢 Commercial"
-        st.markdown(f"**Routed to:** {label}")
+    if flag_reason:
+        st.warning(f"Flag reason: {flag_reason}")
 
-    # Key extracted fields
+    # Key fields
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("Type", report.get("property_type", "—"))
     col2.metric("Location", report.get("location", "—"))
-    col3.metric("Price", f"{report.get('price', '—'):,}" if report.get("price") else "—")
+    price = report.get("price_ils")
+    col3.metric("Price (ILS)", f"{price:,}" if price else "—")
     col4.metric("Rooms", report.get("num_rooms", "—"))
 
     features = report.get("key_features") or []
     if features:
         st.markdown("**Key features:** " + " · ".join(features))
 
-    certs = report.get("certifications") or []
+    certs = report.get("certifications", "")
     if certs:
-        st.markdown("**Certifications:** " + " · ".join(certs))
+        st.markdown(f"**Certifications:** {certs}")
 
-    # Listing brief
-    brief = report.get("brief_markdown") or report.get("brief") or report.get("listing_brief")
-    if brief:
-        st.markdown("### Listing Brief")
-        st.markdown(brief)
+    notes = report.get("enrichment_notes", "")
+    if notes:
+        st.info(notes)
 
     # Image condition scores (§5.2 required element)
-    images = report.get("image_analysis") or []
-    if images:
+    image_scores = report.get("image_scores") or []
+    if image_scores:
         st.markdown("### Image Analysis")
         rows = []
-        for img in images:
+        for img in image_scores:
             rows.append({
-                "URL": img.get("image_url", ""),
+                "URL": img.get("url", ""),
                 "Room type": img.get("room_type", "—"),
                 "Condition score": img.get("condition_score", "—"),
                 "Confidence": f"{img.get('confidence', 0):.0%}" if img.get("confidence") else "—",
@@ -72,24 +86,17 @@ def render_report(result: dict) -> None:
     similar = report.get("similar_listings") or []
     if similar:
         st.markdown("### Similar Listings")
-        for listing in similar:
-            title = listing.get("title") or listing.get("id") or "Listing"
-            price = listing.get("price")
-            price_str = f" — {price:,}" if price else ""
-            location = listing.get("location", "")
-            st.markdown(f"- **{title}** ({listing.get('property_type', '')}){price_str} {location}")
+        for item in similar:
+            if isinstance(item, dict):
+                title = item.get("title") or item.get("id", "Listing")
+                price = item.get("price") or item.get("price_ils")
+                price_str = f" — {price:,} ILS" if price else ""
+                location = item.get("location", "")
+                st.markdown(f"- **{title}**{price_str} {location}".strip())
+            else:
+                st.markdown(f"- {item}")
 
-    insight = report.get("insight")
-    if insight:
+    rag_insight = report.get("rag_insight", "")
+    if rag_insight:
         st.markdown("### RAG Insight")
-        st.info(insight)
-
-    # Fallback: show raw response if none of the known fields matched
-    known_keys = {
-        "status", "team", "report", "property_type", "location", "price",
-        "num_rooms", "key_features", "certifications", "brief_markdown",
-        "brief", "listing_brief", "image_analysis", "similar_listings", "insight",
-    }
-    if not any(k in report for k in known_keys):
-        st.markdown("### Full response")
-        st.json(result)
+        st.info(rag_insight)

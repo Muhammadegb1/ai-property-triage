@@ -31,6 +31,9 @@ def submit_listing(
             json=payload,
             timeout=REQUEST_TIMEOUT,
         )
+        # 422 = input guardrail rejected — valid response, not an error
+        if resp.status_code == 422:
+            return resp.json()
         resp.raise_for_status()
         return resp.json()
     except requests.exceptions.Timeout:

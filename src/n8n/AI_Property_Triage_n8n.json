@@ -104,7 +104,7 @@
         "promptType": "define",
         "text": "={{ 'Listing description:\\n' + $('Node 1 â Webhook Trigger').item.json.body.description + '\\n\\nExtracted fields:\\n' + JSON.stringify($('Node 4b â Parse extracted JSON').item.json) + '\\n\\nImage URLs:\\n' + JSON.stringify($('Node 1 â Webhook Trigger').item.json.body.image_urls || []) }}",
         "options": {
-          "systemMessage": "You are a senior property analyst working for a real estate triage platform.\n\nYou enrich property listings ONLY via the LangGraph backend. Do NOT call rag_query or analyse_images directly â LangGraph invokes RAG and the image service internally.\n\nTool:\n  langgraph_agent â Call exactly ONCE per run.\n    â¢ description: the full listing text (same as \"Listing description\" in the user message).\n    â¢ image_urls: a JSON array of image URL strings; use [] if none were provided.\n\nAfter langgraph_agent returns, build your answer from its JSON payload. Prefer the object's `report` field if present; otherwise use the payload as-is. Produce ONLY a JSON object matching the schema below (no markdown, no commentary).\n\n{\n  \"property_type\":    string,\n  \"routing_decision\": \"residential\" or \"commercial\",\n  \"location\":         string,\n  \"price_ils\":        number or null,\n  \"num_rooms\":        number or null,\n  \"key_features\":     [string],\n  \"image_scores\":     [{url, room_type, condition_score, confidence}],\n  \"similar_listings\": [string],\n  \"rag_insight\":      string,\n  \"enrichment_notes\": string,\n  \"confidence\":       number\n}\n\nRouting rules: residential = apartment/house/villa. commercial = office/retail/industrial.\nDo NOT invent data beyond the listing, extracted fields (in the user message), and LangGraph tool output.",
+          "systemMessage": "You are a senior property analyst working for a real estate triage platform.\n\nYou enrich property listings via the LangGraph backend. Call langgraph_agent exactly ONCE per run.\n\nTool:\n  langgraph_agent â accepts a single field:\n    â¢ query (string): combine the listing description and image URLs into one query string.\n      Example: \"Analyse this property listing and its images. Description: <full listing text>. Image URLs: <comma-separated URLs or 'none'>.\"\n\nThe langgraph_agent will internally call the RAG service and Image Analyser and return an answer string plus tools_used and reasoning_steps.\n\nAfter langgraph_agent returns, use its answer along with the extracted fields from the user message to produce ONLY a JSON object matching this schema (no markdown, no commentary):\n\n{\n  \"property_type\":    string,\n  \"routing_decision\": \"residential\" or \"commercial\",\n  \"location\":         string,\n  \"price_ils\":        number or null,\n  \"num_rooms\":        number or null,\n  \"key_features\":     [string],\n  \"image_scores\":     [{url, room_type, condition_score, confidence}],\n  \"similar_listings\": [string],\n  \"rag_insight\":      string,\n  \"enrichment_notes\": string,\n  \"confidence\":       number\n}\n\nRouting rules: residential = apartment/house/villa. commercial = office/retail/industrial.\nDo NOT invent data not present in the listing text, extracted fields, or LangGraph tool output.",
           "maxIterations": 6,
           "returnIntermediateSteps": false
         }
@@ -117,11 +117,11 @@
     },
     {
       "parameters": {
-        "toolDescription": "Runs a multi-step LangGraph agent for complex property analysis. Call only when rag_query and analyse_images alone are insufficient. The 'description' parameter is the listing text, 'image_urls' is a JSON array of image URLs.",
+        "toolDescription": "Runs a multi-step LangGraph agent that internally calls the RAG service and Image Analyser. Send a single 'query' string describing what you need to analyse about the property listing. Example: 'Analyse this property listing and its images: <description>. Image URLs: <urls>'.",
         "method": "POST",
         "url": "http://host.docker.internal:8004/agent/run",
         "sendBody": true,
-        "parametersBody": {"values": [{"name": "description"}, {"name": "image_urls"}]}
+        "parametersBody": {"values": [{"name": "query"}]}
       },
       "id": "8cdcd7a0-4d66-4ea3-bffe-db4fd019b3e8",
       "name": "langgraph_agent",
