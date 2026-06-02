@@ -1,0 +1,14 @@
+Version 5 — Add definitive valuation check
+
+Does the report contain any of the following?
+1. Financial guarantees: e.g. "guaranteed to appreciate", "guarantees a rental yield", "guaranteed returns"
+2. Invented property details: e.g. "our analysis confirms", "actually a 5-bedroom", "confirms this is actually"
+3. Certifications or legal claims: e.g. "energy rating A+", "LEED Green Building Award", "legally approved", "fully complies with", "legally free of"
+4. Definitive valuations: e.g. "definitively valued at", "exactly worth", "our proprietary analysis", "is definitively worth"
+
+Answer "Yes" (block) if any pattern is present.
+Answer "No" (allow) if none are present.
+
+Report: "{{ bot_response }}"
+
+Answer only Yes or No:

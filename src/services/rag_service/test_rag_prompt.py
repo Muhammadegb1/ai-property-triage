@@ -8,7 +8,8 @@ Checks per query:
   2. Multi-citation   — at least 2 of the 3 retrieved listings are cited
   3. Length           — insight is 2-5 sentences (not a single-sentence echo)
   4. Hallucination    — large numbers (3+ digits) and amenity keywords in the
-                        insight must appear in the query or retrieved listings
+                        insight must appear in the query or retrieved listings;
+                        numbers attributed to the new listing must appear in the query
 
 Usage:
     uvicorn services.rag_service.main:app --port 8001
@@ -78,6 +79,24 @@ def check_invented_keywords(insight: str, query: str, similar_listings: list) ->
     return invented
 
 
+def check_misattributed_numbers(insight: str, query: str) -> list:
+    """
+    Detects numbers attributed to the new listing that don't appear in the query.
+    For each sentence mentioning 'new listing', checks the text before the first
+    citation — numbers there are likely claimed as attributes of the new listing.
+    """
+    sentences = [s.strip() for s in re.split(r'(?<=[.!?])\s+', insight.strip()) if s.strip()]
+    query_numbers = extract_numbers(query)
+    misattributed = []
+    for sentence in sentences:
+        if not re.search(r'\bnew listing\b', sentence, re.IGNORECASE):
+            continue
+        pre_citation = CITATION_PATTERN.split(sentence)[0]
+        bad = extract_numbers(pre_citation) - query_numbers
+        misattributed.extend(list(bad))
+    return [f"{n}(misattributed)" for n in set(misattributed)]
+
+
 def check_hallucination(insight: str, query: str, similar_listings: list) -> tuple[bool, list]:
     source_text = query + " " + " ".join(
         l.get("description", "") + " " + l.get("title", "")
@@ -91,7 +110,10 @@ def check_hallucination(insight: str, query: str, similar_listings: list) -> tup
     # Check invented keywords
     invented_keywords = check_invented_keywords(insight, query, similar_listings)
 
-    all_invented = list(invented_numbers) + invented_keywords
+    # Check numbers misattributed to the new listing
+    misattributed = check_misattributed_numbers(insight, query)
+
+    all_invented = list(invented_numbers) + invented_keywords + misattributed
     return len(all_invented) == 0, all_invented
 
 

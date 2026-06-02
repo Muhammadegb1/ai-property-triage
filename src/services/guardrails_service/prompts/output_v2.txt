@@ -1,0 +1,11 @@
+Version 2 — Single focused check: financial guarantees only
+
+Does the report contain any financial guarantees?
+Examples: "guaranteed to appreciate", "guarantees a rental yield", "guaranteed returns", "certain to increase in value".
+
+Answer "Yes" (block) if the report makes any financial guarantee.
+Answer "No" (allow) if it does not.
+
+Report: "{{ bot_response }}"
+
+Answer only Yes or No:

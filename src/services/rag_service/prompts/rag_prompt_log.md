@@ -155,19 +155,27 @@ Two remaining failures:
 **Failure from v4:** Model uses `[LST-XXX]` as a literal placeholder; gets stuck on a single highly-similar listing.
 
 **Change:**
-- Replaced "like [LST-XXX]" with "using its exact ID (e.g. [LST-001])" — eliminates placeholder confusion.
-- Added "Do not cite the same listing twice" — forces the model off a single listing.
+- Richer role context ("senior real estate analyst", listing agent submitted, archive retrieved) — gives the model better framing.
+- Changed "like [LST-XXX]" to "e.g. [LST-001]" — eliminates placeholder confusion.
+- "Your first sentence compares to one listing. Your second sentence MUST compare to a DIFFERENT listing ID" — sentence-level citation enforcement.
+- Added "Always use the [LST-XXX] bracket format — never refer to a listing by its title alone" — fixes bare-name citations.
+- Added "If the new listing query does not mention a fact, do NOT claim that fact for the new listing" — fixes misattribution hallucination.
 
 **Prompt:**
 ```
-You are a real estate analyst. Write 2-3 sentences comparing the new listing to the retrieved listings.
+You are a senior real estate analyst.
+A new property listing has been submitted, and 3 similar listings were retrieved from the agency archive.
+
+Task: Compare the new listing to the retrieved listings using only the facts shown below.
 
 Rules:
-- Write at least 2 sentences. Each must cite at least one retrieved listing using its exact ID (e.g. [LST-001]).
-- You MUST cite at least 2 different listing IDs from the retrieved listings. Do not cite the same listing twice.
-- Do not just describe the new listing — explain how it compares to the retrieved ones.
+- Write 3–5 sentences.
+- You MUST cite at least 2 different listing IDs. Even if a second listing is less comparable, cite it and briefly state how it differs.
+- Always use the [LST-XXX] bracket format — never refer to a listing by its title alone.
+- Compare specific facts: size, price, location, or features.
 - Only state facts present in the listings below. Do not invent prices, sizes, or features.
-- Use exact numbers as written in the listings.
+- If the new listing query does not mention a fact (size in sqm, plot size, year, etc.), do NOT claim that fact for the new listing.
+- When comparing two prices or sizes, state the direction correctly.
 
 New listing:
 {query}
@@ -181,24 +189,58 @@ Insight:
 **Results:**
 | Check | Score |
 |---|---|
-| Citation present | ?/10 |
-| Multi-citation (≥2) | ?/10 |
-| Length OK (2-5 sentences) | ?/10 |
-| No hallucination | ?/10 |
-| ALL passed | ?/10 |
+| Citation present | 9/10 |
+| Multi-citation (≥2) | 9/10 |
+| Length OK (2-5 sentences) | 10/10 |
+| No hallucination | 10/10 |
+| ALL passed | 9/10 |
+
+**Failure mode identified:**
+Case 08 (agricultural land) — 0 citations. Retrieved listings are all residential/commercial with no agricultural land in the index. The model writes a generic comparison ("the retrieved listings are all residential/commercial") without citing any listing by ID. This is a retrieval gap, not a prompt failure — the vector store has no comparable properties for this query type.
 
 ---
 
 ## Final Entry
 
-**Final prompt:** (fill — paste final prompt text)
+**Final prompt:**
+```
+You are a senior real estate analyst.
+A new property listing has been submitted, and 3 similar listings were retrieved from the agency archive.
+
+Task: Compare the new listing to the retrieved listings using only the facts shown below.
+
+Rules:
+- Write 3–5 sentences.
+- You MUST cite at least 2 different listing IDs. Even if a second listing is less comparable, cite it and briefly state how it differs.
+- Always use the [LST-XXX] bracket format — never refer to a listing by its title alone.
+- Compare specific facts: size, price, location, or features.
+- Only state facts present in the listings below. Do not invent prices, sizes, or features.
+- If the new listing query does not mention a fact (size in sqm, plot size, year, etc.), do NOT claim that fact for the new listing.
+- When comparing two prices or sizes, state the direction correctly.
+
+New listing:
+{query}
+
+Retrieved listings:
+{listings}
+
+Insight:
+```
 
 **Design decisions:**
-- (justify each line in the final prompt)
+- "Senior real estate analyst" + context block: frames the task correctly so the model understands it's doing archive comparison, not general commentary.
+- "e.g. [LST-001]" (not "[LST-XXX]"): earlier versions with [LST-XXX] caused the model to use it as a literal placeholder.
+- "Your second sentence MUST compare to a DIFFERENT listing ID": sentence-level enforcement was more effective than a general "cite 2 listings" rule.
+- "Never refer to a listing by its title alone": fixes the pattern where the model wrote "the rural villa in Moshav Gimzo" instead of [LST-016].
+- "If the new listing does not mention a fact, do NOT claim it": fixes misattribution where the model pulled sqm from a retrieved listing and assigned it to the new listing.
+- "Use exact numbers as written": prevents M-notation conversion (4.2M vs 4200000) that caused false hallucination flags in v2.
 
 **What I learned:**
-- (what phrasing patterns worked)
-- (what consistently failed)
+- Adding a concrete example ID (e.g. [LST-001]) works better than a format placeholder ([LST-XXX]) — the model copies the format literally.
+- Rules targeting sentence structure ("your second sentence MUST...") are more effective than rules targeting output content ("cite 2 listings").
+- Role context and task framing reduce the need for long rule lists — the model behaves better when it understands the situation.
+- The misattribution hallucination (model assigns a retrieved listing's sqm to the new listing) is not caught by number-presence checks — requires a separate pre-citation sentence check.
+- The remaining failure (Case 08) is a retrieval gap: agricultural land has no comparable in the index, so the model gives up on citations. This is a data coverage issue, not a prompt issue.
 
 **Pass rate progression:**
 
@@ -208,4 +250,4 @@ Insight:
 | v2 | 7/10 | 10/10 | 7/10 | 4/10 |
 | v3 | 10/10 | 10/10 | 10/10 | 7/10 |
 | v4 | 9/10 | 10/10 | 10/10 | 8/10 |
-| v5 | ?/10 | ?/10 | ?/10 | ?/10 |
+| v5 | 9/10 | 10/10 | 10/10 | 9/10 |

@@ -40,14 +40,19 @@ PROMPT_VERSION = "v5"
 
 RAG_PROMPT = PromptTemplate(
     input_variables=["query", "listings"],
-    template="""You are a real estate analyst. Write 2-3 sentences comparing the new listing to the retrieved listings.
+    template="""You are a senior real estate analyst. 
+A new property listing has been submitted, and 3 similar listings were retrieved from the agency archive.
+
+Task: Compare the new listing to the retrieved listings using only the facts shown below.
 
 Rules:
-- Write at least 2 sentences. Each must cite at least one retrieved listing using its exact ID (e.g. [LST-001]).
-- You MUST cite at least 2 different listing IDs from the retrieved listings. Do not cite the same listing twice.
-- Do not just describe the new listing — explain how it compares to the retrieved ones.
+- Write 3–5 sentences.
+- You MUST cite at least 2 different listing IDs. Even if a second listing is less comparable, cite it and briefly state how it differs.
+- Always use the [LST-XXX] bracket format — never refer to a listing by its title alone.
+- Compare specific facts: size, price, location, or features.
 - Only state facts present in the listings below. Do not invent prices, sizes, or features.
-- Use exact numbers as written in the listings.
+- If the new listing query does not mention a fact (size in sqm, plot size, year, etc.), do NOT claim that fact for the new listing.
+- When comparing two prices or sizes, state the direction correctly: 4.2M is lower than 9.5M, not higher.
 
 New listing:
 {query}

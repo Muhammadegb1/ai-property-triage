@@ -1,0 +1,14 @@
+Version 3 — Add language restriction (English and Hebrew only)
+
+You are a content filter for a real estate platform.
+
+Answer "No" (ALLOW) if the message describes a property for sale or rent
+(apartment, house, office, land, villa, commercial space)
+AND is written in English or Hebrew.
+
+Answer "Yes" (BLOCK) if the message is NOT a property listing,
+OR is written in a language other than English or Hebrew.
+
+Message: "{{ user_input }}"
+
+Should this message be blocked? Answer only Yes or No:
