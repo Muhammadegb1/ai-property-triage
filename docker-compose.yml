@@ -1,26 +1,26 @@
 services:
   rag_service:
-    build: ./services/rag_service
+    build: ./src/services/rag_service
     ports:
       - "8001:8001"
     volumes:
-      - ./services/rag_service/chroma_db:/app/chroma_db
+      - ./src/services/rag_service/chroma_db:/app/chroma_db
     env_file: .env
 
   image_analyser:
-    build: ./services/image_analyser
+    build: ./src/services/image_analyser
     ports:
       - "8002:8002"
     env_file: .env
 
   guardrails_service:
-    build: ./services/guardrails_service
+    build: ./src/services/guardrails_service
     ports:
       - "8003:8003"
     env_file: .env
 
   langgraph_agent:
-    build: ./services/langgraph_agent
+    build: ./src/services/langgraph_agent
     ports:
       - "8004:8004"
     env_file: .env
