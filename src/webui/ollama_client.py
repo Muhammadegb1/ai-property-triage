@@ -1,8 +1,10 @@
 """
-Ollama client: a simple wrapper around the Ollama API for chatting with the language model.
+Ollama client: thin wrapper around the Ollama HTTP API.
 """
-
 from __future__ import annotations
+
+import json
+from collections.abc import Generator
 
 import requests
 
@@ -30,6 +32,27 @@ def chat(messages: list[dict]) -> str:
         )
         resp.raise_for_status()
         return resp.json()["message"]["content"]
+    except requests.RequestException as exc:
+        raise OllamaError(f"Ollama request failed: {exc}") from exc
+    except (KeyError, ValueError) as exc:
+        raise OllamaError(f"Unexpected Ollama response: {exc}") from exc
+
+
+def chat_stream(messages: list[dict]) -> Generator[str, None, None]:
+    """Yield text chunks as they stream from Ollama."""
+    try:
+        with requests.post(
+            f"{OLLAMA_BASE_URL}/api/chat",
+            json={"model": OLLAMA_MODEL, "messages": messages, "stream": True},
+            timeout=REQUEST_TIMEOUT,
+            stream=True,
+        ) as resp:
+            resp.raise_for_status()
+            for line in resp.iter_lines():
+                if line:
+                    data = json.loads(line)
+                    if not data.get("done"):
+                        yield data["message"]["content"]
     except requests.RequestException as exc:
         raise OllamaError(f"Ollama request failed: {exc}") from exc
     except (KeyError, ValueError) as exc:
