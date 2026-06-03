@@ -49,12 +49,14 @@ def _render_report_body(report: dict, flag_reason: str | None = None) -> None:
         st.warning(f"Flag reason: {flag_reason}")
 
     # Key fields
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4, col5 = st.columns(5)
     col1.metric("Type", report.get("property_type", "—"))
     col2.metric("Location", report.get("location", "—"))
     price = report.get("price_ils")
     col3.metric("Price (ILS)", f"{price:,}" if price else "—")
     col4.metric("Rooms", report.get("num_rooms", "—"))
+    confidence = report.get("confidence")
+    col5.metric("Report confidence", f"{int(confidence * 100)}%" if confidence else "—")
 
     features = report.get("key_features") or []
     if features:
@@ -70,29 +72,42 @@ def _render_report_body(report: dict, flag_reason: str | None = None) -> None:
 
     # Image condition scores (§5.2 required element)
     image_scores = report.get("image_scores") or []
+    image_analysis = report.get("image_analysis", "")
     if image_scores:
         st.markdown("### Image Analysis")
         rows = []
         for img in image_scores:
-            rows.append({
-                "URL": img.get("url", ""),
-                "Room type": img.get("room_type", "—"),
-                "Condition score": img.get("condition_score", "—"),
-                "Confidence": f"{img.get('confidence', 0):.0%}" if img.get("confidence") else "—",
-            })
+            try:
+                rows.append({
+                    "URL": img.get("url", "—"),
+                    "Room type": img.get("room_type", "—"),
+                    "Condition score": img.get("condition_score", "—"),
+                    "Confidence": f"{img.get('confidence', 0):.0%}" if img.get("confidence") else "—",
+                })
+            except AttributeError:
+                rows.append({"Analysis": str(img), "Room type": "—", "Condition score": "—", "Confidence": "—"})
         st.table(rows)
+    elif image_analysis:
+        st.markdown("### Image Analysis")
+        st.info(image_analysis)
 
     # Similar-listing recommendations (§5.2 required element)
     similar = report.get("similar_listings") or []
     if similar:
-        st.markdown("### Similar Listings")
+        st.markdown("### Similar past listings")
         for item in similar:
             if isinstance(item, dict):
                 title = item.get("title") or item.get("id", "Listing")
-                price = item.get("price") or item.get("price_ils")
-                price_str = f" — {price:,} ILS" if price else ""
+                price = item.get("price_ils") or item.get("price")
+                description = item.get("description", "")
                 location = item.get("location", "")
-                st.markdown(f"- **{title}**{price_str} {location}".strip())
+                st.markdown(f"- **{title}** {location}".strip())
+                if description:
+                    # append price if not already in description
+                    if price and "Asking price" not in description and str(price) not in description:
+                        st.markdown(f"  {description} Asking price: {price:,} ILS.")
+                    else:
+                        st.markdown(f"  {description}")
             else:
                 st.markdown(f"- {item}")
 
