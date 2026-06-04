@@ -79,11 +79,12 @@ def _render_report_body(report: dict, flag_reason: str | None = None) -> None:
                 conf  = img.get("confidence")
                 url   = img.get("url") or ""
                 pct   = int(float(score) / 5 * 100) if score is not None else 0
-                short = ("…" + url[-36:]) if len(url) > 40 else url
                 st.markdown(f"""
                 <div class="img-card">
                   <div class="img-room">{room}</div>
-                  <div class="img-url" title="{url}">{short}</div>
+                  <div class="img-url">
+                    <a href="{url}" target="_blank" style="color:#60A5FA;word-break:break-all;font-size:.72rem;line-height:1.4">{url}</a>
+                  </div>
                   <div style="background:#E2E8F0;border-radius:4px;height:6px;overflow:hidden">
                     <div style="width:{pct}%;height:100%;background:linear-gradient(90deg,#D4A843,#F7CA60)"></div>
                   </div>

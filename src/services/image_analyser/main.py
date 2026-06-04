@@ -68,7 +68,11 @@ def health():
 def analyse(req: AnalyseRequest):
     logger.info("Analyse request: %s", req.image_url)
     try:
-        resp = requests.get(req.image_url, timeout=10)
+        resp = requests.get(
+            req.image_url,
+            timeout=10,
+            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"},
+        )
         resp.raise_for_status()
         img = Image.open(BytesIO(resp.content))
     except requests.RequestException as e:

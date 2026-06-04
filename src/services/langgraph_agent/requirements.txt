@@ -1,6 +1,6 @@
-fastapi
-uvicorn
-langgraph
-langchain-openai
-httpx
-python-dotenv
+fastapi==0.136.3
+uvicorn==0.48.0
+langgraph==1.2.2
+langchain-openai==1.2.2
+httpx==0.28.1
+python-dotenv==1.2.2

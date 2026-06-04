@@ -5,7 +5,8 @@ import threading
 import huggingface_hub
 
 from langchain_core.prompts import PromptTemplate
-from langchain_community.llms import LlamaCpp, Ollama
+from langchain_community.llms import LlamaCpp
+from langchain_ollama import OllamaLLM
 import re
 
 
@@ -23,23 +24,28 @@ def get_llm():
     if _llm is None:
         if LLM_BACKEND == "ollama":
             logger.info("Using Ollama backend...")
-            _llm = Ollama(
+            _llm = OllamaLLM(
                 base_url=os.getenv("OLLAMA_BASE_URL", "http://localhost:11434"),
                 model=os.getenv("OLLAMA_MODEL", "llama3.1"),
                 temperature=0.2,
             )
         else:
             logger.info("Loading Llama model...")
-            model_path = huggingface_hub.hf_hub_download(
-                repo_id="bartowski/Meta-Llama-3.1-8B-Instruct-GGUF",
-                filename="Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf",
-            )
+            model_path = os.getenv("GGUF_MODEL_PATH")
+            if not model_path or not os.path.isfile(model_path):
+                logger.info("GGUF_MODEL_PATH not set — downloading from HuggingFace...")
+                model_path = huggingface_hub.hf_hub_download(
+                    repo_id="bartowski/Meta-Llama-3.1-8B-Instruct-GGUF",
+                    filename="Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf",
+                )
+            else:
+                logger.info("Using pre-downloaded model: %s", model_path)
             _llm = LlamaCpp(
                 model_path=model_path,
                 n_ctx=2048,
-                n_threads=4,
+                n_threads=6,
                 temperature=0.2,
-                max_tokens=400,
+                max_tokens=300,
                 verbose=False,
                 stop=["Note:", "Best regards", "Here is", "I hope", "Lastly", "Finally", "\n\n\n", "\n\n"],
             )
