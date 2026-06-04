@@ -1,7 +1,0 @@
-uvicorn src.services.rag_service.main:app --port 8001 --reload
-
-uvicorn src.services.image_analyser.main:app --port 8002 --reload
-
-uvicorn src.services.guardrails_service.main:app --port 8003 --reload
-
-uvicorn src.services.langgraph_agent.main:app --port 8004 --reload

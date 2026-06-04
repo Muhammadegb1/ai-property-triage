@@ -8,6 +8,8 @@ services:
       # On EC2: uncomment to mount pre-downloaded model (avoids re-download on every start)
       # - ~/models:/models
     env_file: .env
+    environment:
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
 
   image_analyser:
     build: ./src/services/image_analyser
