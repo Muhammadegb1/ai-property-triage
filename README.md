@@ -97,8 +97,6 @@ When the user asks a property-related question (price, market trends, rentals), 
 - Streams responses token-by-token with a live cursor
 - Sidebar reflects the currently active model in real time
 
-![Assistant Tab](docs/screenshots/assistant_tab.png)
-
 ### Submission Tab
 
 A form where listing agents submit property descriptions and image URLs. On submission, the form POSTs to the n8n webhook and waits for the triage report. The returned report is rendered with:
@@ -108,10 +106,6 @@ A form where listing agents submit property descriptions and image URLs. On subm
 - **Image analysis cards:** Room type classification, condition score (1–5), confidence progress bar
 - **Similar listings:** Three comparable past listings from the agency archive
 - **RAG insight:** A market comparison paragraph citing specific listing IDs
-
-![Submission Tab](docs/screenshots/submission_tab.png)
-
-![Triage Report](docs/screenshots/triage_report.png)
 
 **Source:** `src/webui/`
 
@@ -136,7 +130,7 @@ The n8n workflow (`src/n8n/AI_Property_Triage_n8n.json`) is the central pipeline
 
 **Workflow file:** `src/n8n/AI_Property_Triage_n8n.json`
 
-![n8n Workflow](docs/screenshots/n8n_workflow.png)
+![n8n Workflow](https://github.com/user-attachments/assets/06a53f9d-53cf-411a-a861-c36aa469ed5f)
 
 ---
 
@@ -178,7 +172,7 @@ The backbone is frozen (ImageNet pretrained). Only the two classifier heads were
 
 **Source:** `src/services/image_analyser/`
 
-![Image Analyser Results](docs/screenshots/image_analyser.png)
+![Image Analyser Results](https://github.com/user-attachments/assets/5409570d-b9ad-4cca-abfd-40f04e61e8e4)
 
 ---
 
