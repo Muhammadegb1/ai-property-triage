@@ -71,19 +71,31 @@ The result is a structured triage report with property type, condition scores, s
 
 ## Layer 1 — WebUI
 
-**Technology:** Streamlit · Ollama · Tavily Search API
+**Technology:** Streamlit · Ollama · OpenAI · Tavily Search API
 
 The web application provides two tabs:
 
 ### Assistant Tab
 
-A real-time chat interface powered by a locally running Ollama model (Llama 3.1). The assistant is grounded as a real estate expert and refuses off-topic queries. When the user asks a property-related question (price, market trends, rentals), the assistant automatically calls the Tavily web search API to inject current market data before generating a response.
+A real-time chat interface with a **model selector** that lets the user choose between three LLM backends at runtime:
+
+| Model | Backend | Description |
+|-------|---------|-------------|
+| 🦙 Llama 3.1 | Local · Ollama | Fast, private, no API cost |
+| 🦙 Llama 3.2 | Local · Ollama | Smaller and faster local model |
+| ✨ GPT-4o mini | OpenAI API | Most accurate, handles complex financial data |
+
+The selected model is **persisted in the URL** (`?model=llama31`) so it survives page refreshes. Switching models automatically clears the chat history.
+
+When the user asks a property-related question (price, market trends, rentals), the assistant automatically calls the Tavily web search API to inject current market data before generating a response.
 
 **Key behaviour:**
+- Model selector with horizontal pill UI — switches backend instantly
 - Detects real estate questions via keyword matching (English + Hebrew)
 - Shows `🔍 Searching web for latest data…` while Tavily fetches results
-- Tavily failures are handled silently — Ollama responds from its own knowledge
+- Tavily failures are handled silently — the selected model responds from its own knowledge
 - Streams responses token-by-token with a live cursor
+- Sidebar reflects the currently active model in real time
 
 ![Assistant Tab](docs/screenshots/assistant_tab.png)
 
@@ -218,7 +230,7 @@ Planner → Tool Executor → Synthesiser → END
 | Agent orchestration | OpenAI GPT-4o-mini | n8n Node 5 |
 | Guardrail evaluation | OpenAI GPT-4o-mini | Guardrails Service |
 | Agent synthesis | OpenAI GPT-4o-mini | LangGraph Agent |
-| Conversational assistant | Ollama (Llama 3.1) | WebUI |
+| Conversational assistant | Ollama (Llama 3.1 / 3.2) or OpenAI GPT-4o mini | WebUI (user-selectable) |
 | RAG inference | Llama.cpp (Llama 3.1 GGUF) | RAG Service |
 
 ---
@@ -551,7 +563,10 @@ The following optional extensions from the project specification were implemente
 Replaced the default local ChromaDB instance with Pinecone cloud vector store. Pre-populated with 20 synthetic property listings. Switchable via the `VECTOR_STORE` environment variable without code changes.
 
 ### Web Search Enrichment (Tavily)
-Added Tavily AI web search to the WebUI assistant tab. Real estate questions automatically trigger a live web search to inject current market data (prices, trends, news) as context before Ollama generates a response. Configurable via `TAVILY_API_KEY`.
+Added Tavily AI web search to the WebUI assistant tab. Real estate questions automatically trigger a live web search to inject current market data (prices, trends, news) as context before the model generates a response. Configurable via `TAVILY_API_KEY`.
+
+### Multi-Model Chat Selector
+Added a runtime model selector to the assistant tab. Users can switch between Llama 3.1, Llama 3.2 (both via local Ollama), and GPT-4o mini (OpenAI API) without restarting the app. The selection persists across page refreshes via URL query parameters.
 
 ---
 

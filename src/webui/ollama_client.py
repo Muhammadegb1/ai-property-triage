@@ -8,7 +8,7 @@ from collections.abc import Generator
 
 import requests
 
-from config import OLLAMA_BASE_URL, OLLAMA_MODEL, REQUEST_TIMEOUT, TAVILY_API_KEY
+from config import OLLAMA_BASE_URL, OLLAMA_MODEL, OPENAI_API_KEY, REQUEST_TIMEOUT, TAVILY_API_KEY
 
 
 class OllamaError(Exception):
@@ -90,12 +90,13 @@ def chat(messages: list[dict]) -> str:
         raise OllamaError(f"Unexpected Ollama response: {exc}") from exc
 
 
-def chat_stream(messages: list[dict]) -> Generator[str, None, None]:
+def chat_stream(messages: list[dict], model: str | None = None) -> Generator[str, None, None]:
     """Yield text chunks as they stream from Ollama."""
+    _model = model or OLLAMA_MODEL
     try:
         with requests.post(
             f"{OLLAMA_BASE_URL}/api/chat",
-            json={"model": OLLAMA_MODEL, "messages": messages, "stream": True},
+            json={"model": _model, "messages": messages, "stream": True},
             timeout=REQUEST_TIMEOUT,
             stream=True,
         ) as resp:
@@ -109,3 +110,22 @@ def chat_stream(messages: list[dict]) -> Generator[str, None, None]:
         raise OllamaError(f"Ollama request failed: {exc}") from exc
     except (KeyError, ValueError) as exc:
         raise OllamaError(f"Unexpected Ollama response: {exc}") from exc
+
+
+def openai_chat_stream(messages: list[dict]) -> Generator[str, None, None]:
+    """Yield text chunks as they stream from OpenAI."""
+    try:
+        from openai import OpenAI, OpenAIError
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        stream = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=messages,
+            stream=True,
+            temperature=0.7,
+        )
+        for chunk in stream:
+            delta = chunk.choices[0].delta.content
+            if delta:
+                yield delta
+    except Exception as exc:
+        raise OllamaError(f"OpenAI request failed: {exc}") from exc

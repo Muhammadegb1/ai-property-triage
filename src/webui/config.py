@@ -13,6 +13,7 @@ N8N_WEBHOOK_URL: str = os.getenv("N8N_WEBHOOK_URL", "")
 REQUEST_TIMEOUT: int = int(os.getenv("REQUEST_TIMEOUT", "120"))
 
 TAVILY_API_KEY: str = os.getenv("TAVILY_API_KEY", "")
+OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
 
 PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 OLLAMA_SYSTEM_PROMPT_FILE = PROMPTS_DIR / "ollama_system.txt"

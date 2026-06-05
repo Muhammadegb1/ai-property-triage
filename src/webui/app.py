@@ -83,9 +83,10 @@ def main() -> None:
 
     with st.sidebar:
         st.header("Configuration")
+        active_model = st.session_state.get("selected_model", OLLAMA_MODEL)
         st.json({
             "ollama_base_url": OLLAMA_BASE_URL,
-            "ollama_model": OLLAMA_MODEL,
+            "active_model": active_model,
             "n8n_webhook_configured": bool(N8N_WEBHOOK_URL),
         })
 

@@ -2,8 +2,31 @@ from __future__ import annotations
 
 import streamlit as st
 
-from config import OLLAMA_MODEL, OLLAMA_SYSTEM_PROMPT_FILE
-from ollama_client import OllamaError, chat_stream, health_check, is_real_estate_question, tavily_search
+from config import OLLAMA_SYSTEM_PROMPT_FILE
+from ollama_client import (
+    OllamaError,
+    chat_stream,
+    health_check,
+    is_real_estate_question,
+    openai_chat_stream,
+    tavily_search,
+)
+
+# ── Model registry ────────────────────────────────────────────────────────────
+MODEL_OPTIONS: dict[str, dict] = {
+    "🦙 Llama 3.1":   {"backend": "ollama", "model": "llama3.1:latest",  "label": "Local · Ollama"},
+    "🦙 Llama 3.2":   {"backend": "ollama", "model": "llama3.2:latest",  "label": "Local · Ollama"},
+    "✨ GPT-4o mini": {"backend": "openai", "model": "gpt-4o-mini",      "label": "OpenAI API"},
+}
+DEFAULT_MODEL = "🦙 Llama 3.1"
+
+# URL-safe keys for persisting selection across page refreshes
+_MODEL_TO_KEY = {
+    "🦙 Llama 3.1":   "llama31",
+    "🦙 Llama 3.2":   "llama32",
+    "✨ GPT-4o mini": "gpt4omini",
+}
+_KEY_TO_MODEL = {v: k for k, v in _MODEL_TO_KEY.items()}
 
 
 def _load_system_prompt() -> str:
@@ -20,15 +43,29 @@ def _bot_bubble(text: str) -> str:
     return "<div class='bubble-bot'><div>" + text + "</div></div>"
 
 
+def _stream_response(messages: list[dict], backend: str, model: str):
+    """Route to correct streaming backend."""
+    if backend == "openai":
+        return openai_chat_stream(messages)
+    return chat_stream(messages, model=model)
+
+
 def render_assistant_tab() -> None:
-    # ── Header ────────────────────────────────────────────────────────
+    # ── Session state init (restore from URL on refresh) ─────────────
+    if "messages"    not in st.session_state: st.session_state.messages    = []
+    if "pending_msg" not in st.session_state: st.session_state.pending_msg = None
+    if "selected_model" not in st.session_state:
+        url_key = st.query_params.get("model", "llama31")
+        st.session_state.selected_model = _KEY_TO_MODEL.get(url_key, DEFAULT_MODEL)
+
+    # ── Header row ────────────────────────────────────────────────────
     col_info, col_btn = st.columns([5, 1])
     with col_info:
-        online = health_check()
-        st.markdown(
-            f"**Real Estate Assistant** &nbsp; {'🟢 Online' if online else '🔴 Offline'}"
-        )
-        st.caption(f"Ollama · `{OLLAMA_MODEL}`")
+        if st.session_state.selected_model == "✨ GPT-4o mini":
+            status = "🟢 Online"
+        else:
+            status = "🟢 Online" if health_check() else "🔴 Offline"
+        st.markdown(f"**Real Estate Assistant** &nbsp; {status}")
     with col_btn:
         st.write("")
         if st.button("Clear", use_container_width=True):
@@ -36,27 +73,49 @@ def render_assistant_tab() -> None:
             st.session_state.pending_msg = None
             st.rerun()
 
-    if "messages"    not in st.session_state: st.session_state.messages    = []
-    if "pending_msg" not in st.session_state: st.session_state.pending_msg = None
+    # ── Model selector ────────────────────────────────────────────────
+    st.markdown(
+        "<p style='margin:4px 0 2px;font-size:0.78rem;color:#6B7280;font-weight:500;"
+        "letter-spacing:.03em;text-transform:uppercase;'>Model</p>",
+        unsafe_allow_html=True,
+    )
+    previous_model = st.session_state.selected_model
+    selected = st.radio(
+        label="model_selector",
+        options=list(MODEL_OPTIONS.keys()),
+        index=list(MODEL_OPTIONS.keys()).index(st.session_state.selected_model),
+        horizontal=True,
+        label_visibility="collapsed",
+    )
+
+    # Clear chat and persist selection in URL when model changes
+    if selected != previous_model:
+        st.session_state.selected_model = selected
+        st.session_state.messages       = []
+        st.session_state.pending_msg    = None
+        st.query_params["model"] = _MODEL_TO_KEY[selected]
+        st.rerun()
+
+    cfg = MODEL_OPTIONS[selected]
+    st.caption(f"`{cfg['model']}` &nbsp;·&nbsp; {cfg['label']}")
+
+    st.markdown("<div style='margin-top:6px'></div>", unsafe_allow_html=True)
 
     # ── Chat box ──────────────────────────────────────────────────────
-    with st.container(height=450, border=True):
+    with st.container(height=420, border=True):
 
-        # Empty state
         if not st.session_state.messages and not st.session_state.pending_msg:
             st.markdown(
-                "<div style='text-align:center;padding:120px 0;"
+                "<div style='text-align:center;padding:110px 0;"
                 "color:#6B7280;font-size:.95rem'>"
                 "💬 Ask me anything about real estate</div>",
                 unsafe_allow_html=True,
             )
 
-        # Render history
         for msg in st.session_state.messages:
             fn = _user_bubble if msg["role"] == "user" else _bot_bubble
             st.markdown(fn(msg["content"]), unsafe_allow_html=True)
 
-        # Phase 2 — pending message: draw + stream
         if st.session_state.pending_msg:
             pending = st.session_state.pending_msg
 
@@ -91,7 +150,7 @@ def render_assistant_tab() -> None:
 
             full_reply = ""
             try:
-                for chunk in chat_stream(api_messages):
+                for chunk in _stream_response(api_messages, cfg["backend"], cfg["model"]):
                     full_reply += chunk
                     reply_slot.markdown(
                         _bot_bubble(full_reply + " ▌"),
@@ -102,15 +161,14 @@ def render_assistant_tab() -> None:
                 st.session_state.pending_msg = None
                 return
 
-            # Final bubble — remove cursor
             reply_slot.markdown(_bot_bubble(full_reply), unsafe_allow_html=True)
 
-            st.session_state.messages.append({"role": "user",      "content": pending})
-            st.session_state.messages.append({"role": "assistant",  "content": full_reply})
+            st.session_state.messages.append({"role": "user",     "content": pending})
+            st.session_state.messages.append({"role": "assistant", "content": full_reply})
             st.session_state.pending_msg = None
             st.rerun()
 
-    # ── Input form (below chat box) ───────────────────────────────────
+    # ── Input form ────────────────────────────────────────────────────
     waiting = bool(st.session_state.pending_msg)
     with st.form("chat_form", clear_on_submit=True):
         user_input = st.text_area(
@@ -131,7 +189,6 @@ def render_assistant_tab() -> None:
         st.session_state.pending_msg = None
         st.rerun()
 
-    # Phase 1 — store message and trigger Phase 2
     if send and user_input.strip():
         st.session_state.pending_msg = user_input.strip()
         st.rerun()
