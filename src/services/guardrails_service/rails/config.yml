@@ -47,4 +47,3 @@ prompts:
       Report: "{{ bot_response }}"
 
       Answer only Yes or No:
-
