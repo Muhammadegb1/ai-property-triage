@@ -1,4 +1,4 @@
-<img width="1865" height="821" alt="image" src="https://github.com/user-attachments/assets/918adfe7-1ef4-4efb-9592-781617d4ea89" /># AI-Powered Real Estate Property Triage System
+# AI-Powered Real Estate Property Triage System
 
 A production-grade, multi-layer AI system that automates the intake and evaluation of real estate property listings. The system validates submissions, classifies images, retrieves similar past listings, and produces structured triage reports — all orchestrated through a stateful AI pipeline.
 
@@ -97,6 +97,8 @@ When the user asks a property-related question (price, market trends, rentals), 
 - Streams responses token-by-token with a live cursor
 - Sidebar reflects the currently active model in real time
 
+![Assistant Tab](docs/screenshots/assistant_tab.png)
+
 ### Submission Tab
 
 A form where listing agents submit property descriptions and image URLs. On submission, the form POSTs to the n8n webhook and waits for the triage report. The returned report is rendered with:
@@ -106,6 +108,10 @@ A form where listing agents submit property descriptions and image URLs. On subm
 - **Image analysis cards:** Room type classification, condition score (1–5), confidence progress bar
 - **Similar listings:** Three comparable past listings from the agency archive
 - **RAG insight:** A market comparison paragraph citing specific listing IDs
+
+![Submission Tab](docs/screenshots/submission_tab.png)
+
+![Triage Report](docs/screenshots/triage_report.png)
 
 **Source:** `src/webui/`
 
@@ -130,7 +136,7 @@ The n8n workflow (`src/n8n/AI_Property_Triage_n8n.json`) is the central pipeline
 
 **Workflow file:** `src/n8n/AI_Property_Triage_n8n.json`
 
-![n8n Workflow](https://github.com/user-attachments/assets/06a53f9d-53cf-411a-a861-c36aa469ed5f)
+![n8n Workflow](docs/screenshots/n8n_workflow.png)
 
 ---
 
@@ -172,7 +178,7 @@ The backbone is frozen (ImageNet pretrained). Only the two classifier heads were
 
 **Source:** `src/services/image_analyser/`
 
-![Image Analyser Results](https://github.com/user-attachments/assets/5409570d-b9ad-4cca-abfd-40f04e61e8e4)
+![Image Analyser Results](docs/screenshots/image_analyser.png)
 
 ---
 
@@ -624,7 +630,7 @@ ai-property-triage/
 ## Screenshots
 
 ### WebUI — Assistant Tab
-![Assistant Tab](https://github.com/user-attachments/assets/b5f35517-7f05-444d-930b-a4e074e4cd15)
+![Assistant Tab](docs/screenshots/assistant_tab.png)
 
 ### WebUI — Submission Form
 ![Submission Tab](docs/screenshots/submission_tab.png)
