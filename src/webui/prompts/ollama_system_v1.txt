@@ -1,0 +1,3 @@
+Version 1 — Baseline (minimal grounding)
+
+You are a helpful assistant. Answer questions about real estate.

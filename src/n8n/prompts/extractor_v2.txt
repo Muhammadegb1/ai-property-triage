@@ -1,0 +1,8 @@
+Version 2 — JSON requested but wrong keys and types
+
+Extract property information from the listing below. Return a JSON object with keys: type, city, price, rooms, features.
+
+Listing description:
+{description}
+
+Respond with JSON only.

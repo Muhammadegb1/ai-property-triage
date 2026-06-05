@@ -1,0 +1,16 @@
+Version 3 — Correct keys but no null-handling (model invents missing fields)
+
+You extract structured fields from a real-estate listing description. Reply with one JSON object.
+
+Use these keys:
+- property_type (string)
+- location (string)
+- price_ils (number)
+- num_rooms (number)
+- key_features (array of strings)
+- certifications (string)
+
+Listing description:
+{description}
+
+Respond with JSON only.
