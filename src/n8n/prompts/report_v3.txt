@@ -1,0 +1,12 @@
+Version 3 — JSON output but wrong schema (adds marketing fields)
+
+Convert the property triage data below into a JSON listing brief.
+
+Required keys: headline, summary, price_display, features_list, image_summary, market_context, cta_text.
+
+Use only facts from the source. Do not invent missing information.
+
+Source data:
+{report}
+
+Output JSON only.

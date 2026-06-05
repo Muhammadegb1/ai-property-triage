@@ -9,16 +9,16 @@ logger = logging.getLogger(__name__)
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-import chromadb
 from dotenv import load_dotenv
+load_dotenv()
+
+import chromadb
 from fastapi import FastAPI, HTTPException
 from pinecone import Pinecone
 from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
 
 from rag_chain import generate_insight, get_llm
-
-load_dotenv()
 
 CHROMA_DIR = os.path.join(os.path.dirname(__file__), "chroma_db")
 VECTOR_STORE = os.getenv("VECTOR_STORE", "chroma")   # "chroma" or "pinecone"

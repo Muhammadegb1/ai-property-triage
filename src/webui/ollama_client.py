@@ -1,57 +1,111 @@
-"""Thin client for the local Ollama chat API."""
-
+"""
+Ollama client: thin wrapper around the Ollama HTTP API.
+"""
 from __future__ import annotations
 
-import httpx
+import json
+from collections.abc import Generator
 
-from config import OLLAMA_BASE_URL, OLLAMA_MODEL
+import requests
+
+from config import OLLAMA_BASE_URL, OLLAMA_MODEL, REQUEST_TIMEOUT, TAVILY_API_KEY
 
 
 class OllamaError(Exception):
-    """Raised when Ollama returns an error or is unreachable."""
+    pass
 
 
-def chat(
-    messages: list[dict[str, str]],
-    *,
-    model: str | None = None,
-    timeout: float = 120.0,
-) -> str:
-    """Send a chat completion request to Ollama and return the assistant reply."""
-    payload = {
-        "model": model or OLLAMA_MODEL,
-        "messages": messages,
-        "stream": False,
-    }
-    url = f"{OLLAMA_BASE_URL}/api/chat"
+_REAL_ESTATE_KEYWORDS = {
+    "price", "apartment", "flat", "house", "villa", "rent", "buy", "sell",
+    "market", "listing", "property", "real estate", "bedroom", "bathroom",
+    "sqm", "square meter", "mortgage", "neighborhood", "location", "floor",
+    "condo", "studio", "duplex", "penthouse", "balcony", "invest",
+    "דירה", "בית", "נכס", "שכירות", "מחיר", "שוק", "חדר", "קומה", "שכונה",
+}
 
+
+def is_real_estate_question(text: str) -> bool:
+    text_lower = text.lower()
+    return any(kw in text_lower for kw in _REAL_ESTATE_KEYWORDS)
+
+
+def tavily_search(query: str) -> str:
+    if not TAVILY_API_KEY:
+        print("[Tavily] API key not set — skipping web search.")
+        return ""
     try:
-        with httpx.Client(timeout=timeout) as client:
-            response = client.post(url, json=payload)
-            response.raise_for_status()
-    except httpx.ConnectError as exc:
-        raise OllamaError(
-            "Cannot reach Ollama. Run `ollama serve` and `ollama pull llama3`."
-        ) from exc
-    except httpx.HTTPStatusError as exc:
-        raise OllamaError(f"Ollama HTTP {exc.response.status_code}: {exc.response.text}") from exc
+        print(f"[Tavily] Searching: {query!r}")
+        resp = requests.post(
+            "https://api.tavily.com/search",
+            json={
+                "api_key": TAVILY_API_KEY,
+                "query": query,
+                "max_results": 3,
+                "include_answer": True,
+            },
+            timeout=10,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        answer = data.get("answer")
+        results = data.get("results", [])
+        if not results and not answer:
+            print("[Tavily] No results returned.")
+            return ""
+        print(f"[Tavily] Got {len(results)} results, answer: {bool(answer)}")
+        context = ""
+        if answer:
+            context += f"Web search summary: {answer}\n\n"
+        parts = [
+            f"Source {i+1} ({r['url']}):\n{r['content']}"
+            for i, r in enumerate(results[:3])
+        ]
+        context += "\n\n".join(parts)
+        return context
+    except Exception as e:
+        print(f"[Tavily] Error: {e}")
+        return ""
 
-    data = response.json()
-    message = data.get("message") or {}
-    content = message.get("content", "").strip()
-    if not content:
-        raise OllamaError("Ollama returned an empty response.")
-    return content
 
-
-def health_check(*, model: str | None = None) -> bool:
-    """Return True if Ollama is up and the configured model is available."""
-    target = model or OLLAMA_MODEL
+def health_check() -> bool:
     try:
-        with httpx.Client(timeout=10.0) as client:
-            response = client.get(f"{OLLAMA_BASE_URL}/api/tags")
-            response.raise_for_status()
-        names = {m.get("name", "").split(":")[0] for m in response.json().get("models", [])}
-        return target.split(":")[0] in names or any(n.startswith(target) for n in names)
-    except (httpx.HTTPError, OllamaError):
+        resp = requests.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=5)
+        return resp.status_code == 200
+    except requests.RequestException:
         return False
+
+
+def chat(messages: list[dict]) -> str:
+    try:
+        resp = requests.post(
+            f"{OLLAMA_BASE_URL}/api/chat",
+            json={"model": OLLAMA_MODEL, "messages": messages, "stream": False},
+            timeout=REQUEST_TIMEOUT,
+        )
+        resp.raise_for_status()
+        return resp.json()["message"]["content"]
+    except requests.RequestException as exc:
+        raise OllamaError(f"Ollama request failed: {exc}") from exc
+    except (KeyError, ValueError) as exc:
+        raise OllamaError(f"Unexpected Ollama response: {exc}") from exc
+
+
+def chat_stream(messages: list[dict]) -> Generator[str, None, None]:
+    """Yield text chunks as they stream from Ollama."""
+    try:
+        with requests.post(
+            f"{OLLAMA_BASE_URL}/api/chat",
+            json={"model": OLLAMA_MODEL, "messages": messages, "stream": True},
+            timeout=REQUEST_TIMEOUT,
+            stream=True,
+        ) as resp:
+            resp.raise_for_status()
+            for line in resp.iter_lines():
+                if line:
+                    data = json.loads(line)
+                    if not data.get("done"):
+                        yield data["message"]["content"]
+    except requests.RequestException as exc:
+        raise OllamaError(f"Ollama request failed: {exc}") from exc
+    except (KeyError, ValueError) as exc:
+        raise OllamaError(f"Unexpected Ollama response: {exc}") from exc

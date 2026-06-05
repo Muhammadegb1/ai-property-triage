@@ -1,0 +1,6 @@
+Version 1 — Baseline (marketing prose, invents facts)
+
+Write a polished, publishable property listing brief in HTML format. Make it attractive for buyers. Include a compelling headline, property highlights, and a call to action.
+
+Source data:
+{report}

@@ -1,51 +1,52 @@
-"""Submit listing payloads to the n8n webhook."""
-
 from __future__ import annotations
 
-import httpx
+import requests
 
-from config import LOCAL_PIPELINE_URL, N8N_WEBHOOK_URL, USE_LOCAL_PIPELINE
+from config import N8N_WEBHOOK_URL, REQUEST_TIMEOUT
 
 
 class N8nError(Exception):
-    """Raised when the n8n webhook call fails."""
+    pass
 
 
 def submit_listing(
-    *,
     description: str,
     image_urls: list[str],
     agent_name: str,
-    timeout: float = 300.0,
 ) -> dict:
-    """POST listing data to the n8n webhook and return the JSON response."""
-    payload = {
-        "description": description.strip(),
-        "image_urls": image_urls,
-        "agent_name": agent_name.strip(),
-    }
-
-    if USE_LOCAL_PIPELINE:
-        url = LOCAL_PIPELINE_URL
-    elif N8N_WEBHOOK_URL.strip():
-        url = N8N_WEBHOOK_URL
-    else:
+    if not N8N_WEBHOOK_URL:
         raise N8nError(
-            "Set N8N_WEBHOOK_URL or USE_LOCAL_PIPELINE=true in code/webui/.env"
+            "N8N_WEBHOOK_URL is not set. Add it to your .env file."
         )
 
-    try:
-        with httpx.Client(timeout=timeout) as client:
-            response = client.post(url, json=payload)
-            response.raise_for_status()
-    except httpx.ConnectError as exc:
-        raise N8nError("Cannot reach the n8n webhook URL.") from exc
-    except httpx.HTTPStatusError as exc:
-        raise N8nError(
-            f"n8n webhook HTTP {exc.response.status_code}: {exc.response.text[:500]}"
-        ) from exc
+    payload = {
+        "description": description,
+        "image_urls": image_urls,
+        "agent_name": agent_name,
+    }
 
     try:
-        return response.json()
-    except ValueError:
-        return {"raw_response": response.text}
+        resp = requests.post(
+            N8N_WEBHOOK_URL,
+            json=payload,
+            timeout=REQUEST_TIMEOUT,
+        )
+        # 422 = input guardrail rejected — valid response, not an error
+        if resp.status_code == 422:
+            return resp.json()
+        resp.raise_for_status()
+        return resp.json()
+    except requests.exceptions.Timeout:
+        raise N8nError(
+            "n8n did not respond in time. The pipeline may still be running — try again."
+        )
+    except requests.exceptions.ConnectionError:
+        raise N8nError(
+            f"Cannot reach n8n at {N8N_WEBHOOK_URL}. Check that n8n is running."
+        )
+    except requests.exceptions.HTTPError as exc:
+        raise N8nError(
+            f"n8n returned an error: {exc.response.status_code} — {exc.response.text[:300]}"
+        ) from exc
+    except ValueError as exc:
+        raise N8nError(f"n8n response is not valid JSON: {exc}") from exc

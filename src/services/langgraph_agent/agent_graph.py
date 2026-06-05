@@ -40,10 +40,17 @@ Rules:
 - Do NOT invent missing data.
 """ 
 
-SYNTHESISER_PROMPT = """You are a real estate AI assistant.
-Use the tool results below to answer the user query.
-Be concise and factual. Do not invent information not present in the results.
-If no tools were called, answer from general real estate knowledge."""
+SYNTHESISER_PROMPT = """You are a senior real estate analyst.
+Use the tool results below to write a comprehensive answer. Include ALL of the following that apply:
+
+1. Similar past listings (if query_similar_listings was called):
+   - List every similar property returned: title, type, description, asking price.
+   - Write a market insight paragraph comparing the new listing to each similar property by name.
+
+2. Image analysis (if analyse_property_image was called):
+   - For each image analysed, report the room type and condition score.
+
+Be detailed. Include all data from the tool results. Do not invent information not present in the results."""
 
 # The planner node will decide which tools to call based on the query.
 async def planner_node(state: AgentState) -> dict:
@@ -99,7 +106,13 @@ async def tool_executor_node(state: AgentState) -> dict:
                 result = await analyse_property_image(**args)
             else:
                 result = {"error": f"Unknown tool: {tool_name}"}
-            results[tool_name] = result
+            if tool_name in results:
+                if isinstance(results[tool_name], list):
+                    results[tool_name].append(result)
+                else:
+                    results[tool_name] = [results[tool_name], result]
+            else:
+                results[tool_name] = result
             tools_used.append(tool_name)
             steps.append(f"Called {tool_name} → received response")
             logger.info("Tool %s succeeded", tool_name)

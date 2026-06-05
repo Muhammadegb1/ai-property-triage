@@ -7,7 +7,9 @@ logger = logging.getLogger(__name__)
 
 RAG_SERVICE_URL = os.getenv("RAG_SERVICE_URL", "http://localhost:8001")
 IMAGE_ANALYSER_URL = os.getenv("IMAGE_ANALYSER_URL", "http://localhost:8002")
-HTTP_TIMEOUT = float(os.getenv("HTTP_TIMEOUT", "30"))
+
+def _timeout() -> float:
+    return float(os.getenv("HTTP_TIMEOUT", "120"))
 
 TOOL_DESCRIPTIONS = {
     "query_similar_listings": (
@@ -29,7 +31,7 @@ TOOL_DESCRIPTIONS = {
 async def query_similar_listings(description: str) -> dict:
     logger.info("Calling RAG service: description=%r", description[:80])
     try:
-        async with httpx.AsyncClient(timeout=HTTP_TIMEOUT) as client:
+        async with httpx.AsyncClient(timeout=_timeout()) as client:
             r = await client.post(
                 f"{RAG_SERVICE_URL}/query",
                 json={"description": description},
@@ -52,7 +54,7 @@ async def query_similar_listings(description: str) -> dict:
 async def analyse_property_image(image_url: str) -> dict:
     logger.info("Calling Image Analyser: url=%r", image_url)
     try:
-        async with httpx.AsyncClient(timeout=HTTP_TIMEOUT) as client:
+        async with httpx.AsyncClient(timeout=_timeout()) as client:
             r = await client.post(
                 f"{IMAGE_ANALYSER_URL}/analyse",
                 json={"image_url": image_url},

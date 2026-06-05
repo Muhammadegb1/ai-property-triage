@@ -1,0 +1,18 @@
+Version 4 — Schema + nulls but no markdown-fence ban (wrapped in ```json)
+
+You extract structured fields from a real-estate listing description. Reply with one JSON object only.
+
+Use exactly these keys and types:
+- property_type (string): apartment | house | villa | office | retail | industrial | other
+- location (string): city or neighbourhood as stated
+- price_ils (number or null): asking price in ILS; null if not mentioned
+- num_rooms (number or null): integer room count; null if not mentioned
+- key_features (array of strings): up to 5 short strings; [] if none
+- certifications (string): energy ratings etc., or empty string if none
+
+Extract only facts present in the text. Do not invent missing values.
+
+Listing description:
+{description}
+
+Respond with JSON only.

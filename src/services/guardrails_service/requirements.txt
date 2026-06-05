@@ -1,5 +1,5 @@
-fastapi
-uvicorn
-nemoguardrails
-openai
-python-dotenv
+fastapi==0.136.3
+uvicorn==0.48.0
+nemoguardrails==0.22.0
+openai==2.38.0
+python-dotenv==1.2.2

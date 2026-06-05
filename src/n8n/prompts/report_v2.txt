@@ -1,0 +1,8 @@
+Version 2 — HTML brief with no-invention rule (still wrong output format)
+
+Write a property listing brief in HTML using only the facts in the source data below. Do not invent prices, room counts, or features.
+
+Include: headline, location, price, key features, image condition summary, and similar listings section.
+
+Source data:
+{report}

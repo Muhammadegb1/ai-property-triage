@@ -13,9 +13,7 @@ def test_rag_chain():
 
     embedder = SentenceTransformer("all-MiniLM-L6-v2")
     query = (
-        "Renovated 2-bedroom apartment in Netanya, 78 sqm, updated kitchen and bathroom, "
-        "parking in building basement. 5-minute walk to the beachfront promenade. "
-        "Asking price: 1,950,000 ILS."
+        "3-bedroom apartment in Tel Aviv, renovated kitchen, balcony"
     )
     # Well-maintained 4-bedroom villa with garden and pool
     # Renovated 2-bedroom apartment with parking near the beach

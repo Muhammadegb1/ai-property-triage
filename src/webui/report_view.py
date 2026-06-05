@@ -1,334 +1,125 @@
-"""Format n8n pipeline responses into the triage report layout."""
-
 from __future__ import annotations
 
-import re
-from typing import Any
+import streamlit as st
 
-import httpx
-
-SECTION_STYLE = (
-    "background:#1e3a5f;color:white;padding:8px 12px;"
-    "font-weight:600;margin:16px 0 8px 0;border-radius:4px;"
-)
-BANNER_STYLE = (
-    "background:#1e3a5f;color:white;padding:16px;border-radius:6px;margin:12px 0;"
-)
+_CSS = ""  # styles are defined in app.py to match the dark theme
 
 
-def _first_sentence(text: str, max_len: int = 220) -> str:
-    t = " ".join(text.split())
-    if len(t) <= max_len:
-        return t
-    cut = t[:max_len]
-    if " " in cut:
-        cut = cut.rsplit(" ", 1)[0]
-    return cut + "…"
+def render_report(result: dict) -> None:
+    st.markdown(_CSS, unsafe_allow_html=True)
+
+    if not result:
+        st.info("Pipeline returned an empty response.")
+        return
+
+    if result.get("rejected"):
+        st.error(f"🚫 Listing rejected: {result.get('reason', 'Input guardrail failed.')}")
+        return
+
+    if result.get("human_review_required"):
+        st.warning(result.get("message", "Report flagged for human review (output guardrail)."))
+        if report := result.get("report", {}):
+            st.markdown("### Report (pending review)")
+            _render_report_body(report, flag_reason=result.get("flag_reason"))
+        return
+
+    if result.get("success"):
+        channel = result.get("channel", "")
+        label = {"residential": "🏡 Routed to Residential Team",
+                 "commercial":  "🏢 Routed to Commercial Team"}.get(channel, "✅ Complete")
+        st.success(label)
+        _render_report_body(result.get("report", {}))
+        return
+
+    st.markdown("### Response")
+    st.json(result)
 
 
-def _parse_description(description: str) -> dict[str, Any]:
-    lower = description.lower()
-    rooms = None
-    m = re.search(r"(\d+)\s*[- ]?\s*(?:bed(?:room)?s?|br|room)", lower)
-    if m:
-        rooms = int(m.group(1))
-    price = None
-    pm = re.search(r"([\d,]+)\s*(?:ils|nis|₪|usd|\$)?", description, re.I)
-    if pm:
-        try:
-            price = int(pm.group(1).replace(",", ""))
-        except ValueError:
-            price = None
-    ptype = "Apartment"
-    if "villa" in lower:
-        ptype = "Villa"
-    elif "house" in lower:
-        ptype = "House"
-    elif "office" in lower:
-        ptype = "Office"
-    location = None
-    for pat in (
-        r"(?:in|at)\s+([A-Za-z\u0590-\u05FF][A-Za-z\u0590-\u05FF\s,'-]{2,50})",
-        r"([A-Za-z\u0590-\u05FF][A-Za-z\u0590-\u05FF\s,'-]{2,40}),\s*([A-Za-z\u0590-\u05FF\s'-]{2,30})",
-    ):
-        lm = re.search(pat, description, re.I)
-        if lm:
-            location = ", ".join(g.strip() for g in lm.groups() if g).strip(" ,")
-            if len(location) > 3:
-                break
-    features: list[str] = []
-    for kw in (
-        "renovated",
-        "parking",
-        "balcony",
-        "elevator",
-        "furnished",
-        "sea view",
-        "sqm",
-        "m²",
-        "bathroom",
-        "kitchen",
-    ):
-        if kw in lower and kw not in " ".join(features).lower():
-            m2 = re.search(rf"(\d+\s*(?:sqm|m²|sq\s*m))", lower) if kw == "sqm" else None
-            features.append(m2.group(1) if m2 else kw.replace("sqm", "size noted in listing"))
-    if not features:
-        features = [s.strip() for s in re.split(r"[.\n]", description) if 5 < len(s.strip()) < 80][:4]
-    return {
-        "property_type": ptype,
-        "location": location,
-        "price_ils": price,
-        "num_rooms": rooms,
-        "key_features": features[:6],
-    }
+def _render_report_body(report: dict, flag_reason: str | None = None) -> None:
+    st.markdown("---")
+    st.subheader("Triage Report")
 
+    if flag_reason:
+        st.warning(f"Flag reason: {flag_reason}")
 
-def fetch_image_scores(urls: list[str]) -> list[dict[str, Any]]:
-    scores: list[dict[str, Any]] = []
-    for url in urls:
-        try:
-            with httpx.Client(timeout=12.0) as client:
-                r = client.post(
-                    "http://127.0.0.1:8003/analyse",
-                    json={"image_url": url},
-                )
-                r.raise_for_status()
-                data = r.json()
-            scores.append(
-                {
-                    "url": url,
-                    "room_type": data.get("room_type", "other"),
-                    "condition_score": data.get("condition_score", 3),
-                    "confidence": data.get("confidence", 0.8),
-                }
-            )
-        except Exception:
-            scores.append(
-                {
-                    "url": url,
-                    "room_type": "other",
-                    "condition_score": 3,
-                    "confidence": 0.5,
-                }
-            )
-    return scores
-
-
-def _format_price(price: Any) -> str:
-    if price is None:
-        return "—"
-    try:
-        n = int(price)
-        return f"₪{n:,}"
-    except (TypeError, ValueError):
-        return str(price)
-
-
-def _stars(score: float) -> str:
-    full = int(score)
-    half = 1 if score - full >= 0.25 else 0
-    empty = 5 - full - half
-    return "★" * full + ("½" if half else "") + "☆" * empty + f"  ({score:.1f}/5)"
-
-
-def _format_similar(item: Any) -> str:
-    if isinstance(item, str):
-        return item
-    if not isinstance(item, dict):
-        return str(item)
-    title = item.get("title") or item.get("id") or "Listing"
-    rooms = item.get("rooms")
-    price = item.get("price")
-    sqm = item.get("sqm")
-    desc = item.get("description") or title
-    parts = [desc if len(str(desc)) > 40 else f"Comparable: {title}"]
-    if rooms:
-        parts.append(f"{rooms} bedrooms")
-    if sqm:
-        parts.append(f"{sqm} sqm")
-    if price:
-        parts.append(f"Asking price: {int(price):,} ILS")
-    return ". ".join(parts) + "."
-
-
-def normalize_result(
-    result: dict,
-    *,
-    description: str = "",
-    image_urls: list[str] | None = None,
-) -> dict[str, Any]:
-    """Map n8n workflow payloads to one report model."""
-    parsed = _parse_description(description) if description else {}
-    image_urls = image_urls or []
-
-    if result.get("success") and isinstance(result.get("report"), dict):
-        report = dict(result["report"])
-        channel = result.get("channel") or report.get("routing_decision") or "residential"
-    elif result.get("status") == "ok":
-        report = {
-            "property_type": (result.get("extracted_fields") or {}).get("property_type"),
-            "location": (result.get("extracted_fields") or {}).get("location"),
-            "price_ils": None,
-            "num_rooms": (result.get("extracted_fields") or {}).get("rooms"),
-            "key_features": (result.get("extracted_fields") or {}).get("key_features") or [],
-            "image_scores": result.get("image_analysis") or [],
-            "similar_listings": result.get("similar_listings") or [],
-            "rag_insight": "",
-            "enrichment_notes": result.get("listing_brief") or "",
-            "routing_decision": result.get("routing") or "residential",
-            "confidence": 0.9,
-        }
-        price_raw = (result.get("extracted_fields") or {}).get("price")
-        if price_raw:
-            pm = re.search(r"([\d,]+)", str(price_raw))
-            if pm:
-                try:
-                    report["price_ils"] = int(pm.group(1).replace(",", ""))
-                except ValueError:
-                    pass
-        channel = report.get("routing_decision") or "residential"
-        rag = result.get("rag_insight")
-        if not rag and isinstance(result.get("similar_listings"), list):
-            pass
-    else:
-        report = dict(result.get("report") or result)
-        channel = report.get("routing_decision") or result.get("routing") or "residential"
-
-    loc = report.get("location") or parsed.get("location")
-    if not loc or str(loc).lower() in ("see listing", "unknown", "not provided", ""):
-        loc = parsed.get("location") or "—"
-
-    ptype = report.get("property_type") or parsed.get("property_type") or "Property"
-    if isinstance(ptype, str):
-        ptype = ptype.strip().capitalize()
-
-    rooms = report.get("num_rooms")
-    if rooms is None:
-        rooms = parsed.get("num_rooms")
-
+    # ── Metrics ──────────────────────────────────────────────────────
+    col1, col2, col3, col4, col5 = st.columns(5)
+    col1.metric("Type",              report.get("property_type", "—"))
+    col2.metric("Location",          report.get("location", "—"))
     price = report.get("price_ils")
-    if price is None:
-        price = parsed.get("price_ils")
+    col3.metric("Price (ILS)",       f"{price:,}" if price else "—")
+    col4.metric("Rooms",             report.get("num_rooms", "—"))
+    confidence = report.get("confidence")
+    col5.metric("Report confidence", f"{int(confidence * 100)}%" if confidence else "—")
 
-    features = report.get("key_features") or parsed.get("key_features") or []
-    if isinstance(features, str):
-        features = [features]
+    # ── Key features as chips ─────────────────────────────────────────
+    features = report.get("key_features") or []
+    if features:
+        chips = "".join(f'<span class="chip">{f}</span>' for f in features)
+        st.markdown(f"**Key features**<br>{chips}", unsafe_allow_html=True)
 
-    scores = report.get("image_scores") or report.get("image_analysis") or []
-    if not scores and image_urls:
-        scores = fetch_image_scores(image_urls)
+    if certs := report.get("certifications"):
+        st.markdown(f"🏅 **Certifications:** {certs}")
 
-    conf = report.get("confidence")
-    if conf is None:
-        conf = 0.85
-    try:
-        conf_f = float(conf)
-        confidence_pct = int(conf_f * 100) if conf_f <= 1 else int(conf_f)
-    except (TypeError, ValueError):
-        confidence_pct = 85
+    if notes := report.get("enrichment_notes"):
+        st.info(notes)
 
+    # ── Image analysis cards ──────────────────────────────────────────
+    image_scores = report.get("image_scores") or []
+    if image_scores:
+        st.markdown("### Image Analysis")
+        cols = st.columns(min(len(image_scores), 3))
+        for i, img in enumerate(image_scores):
+            with cols[i % len(cols)]:
+                if not isinstance(img, dict):
+                    st.text(str(img))
+                    continue
+                room  = (img.get("room_type") or "unknown").replace("_", " ").title()
+                score = img.get("condition_score")
+                conf  = img.get("confidence")
+                url   = img.get("url") or ""
+                pct   = int(float(score) / 5 * 100) if score is not None else 0
+                st.markdown(f"""
+                <div class="img-card">
+                  <div class="img-room">{room}</div>
+                  <div class="img-url">
+                    <a href="{url}" target="_blank" style="color:#60A5FA;word-break:break-all;font-size:.72rem;line-height:1.4">{url}</a>
+                  </div>
+                  <div style="background:#E2E8F0;border-radius:4px;height:6px;overflow:hidden">
+                    <div style="width:{pct}%;height:100%;background:linear-gradient(90deg,#D4A843,#F7CA60)"></div>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:.76rem;color:#6C7A8A">
+                    <span>Score {"—" if score is None else f"{score}/5"}</span>
+                    <span>{"—" if conf is None else f"{conf:.0%} conf."}</span>
+                  </div>
+                </div>""", unsafe_allow_html=True)
+    elif image_analysis := report.get("image_analysis"):
+        st.markdown("### Image Analysis")
+        st.info(image_analysis)
+
+    # ── Similar listings as cards ─────────────────────────────────────
     similar = report.get("similar_listings") or []
-    similar_text = [_format_similar(s) for s in similar]
+    if similar:
+        st.markdown("### Similar past listings")
+        for item in similar:
+            if isinstance(item, dict):
+                title = item.get("title") or item.get("id", "Listing")
+                price = item.get("price_ils") or item.get("price")
+                desc  = item.get("description", "")
+                loc   = item.get("location", "")
+                if desc and price and isinstance(price, (int, float)) \
+                        and "Asking price" not in desc and str(price) not in desc:
+                    desc += f" Asking price: {price:,} ILS."
+                meta = f"<span style='font-size:.78rem;color:#8A9AB0'>{loc}</span>" if loc else ""
+                st.markdown(f"""
+                <div class="lst-card">
+                  <div class="lst-title">{title}</div>{meta}
+                  {"<div class='lst-desc'>" + desc + "</div>" if desc else ""}
+                </div>""", unsafe_allow_html=True)
+            else:
+                st.markdown(f"- {item}")
 
-    market = (report.get("rag_insight") or "").strip()
-    notes = (report.get("enrichment_notes") or "").strip()
-    if market.lower().startswith("mock langgraph"):
-        market = ""
-    brief = result.get("listing_brief")
-    if isinstance(brief, str) and "market insight" in brief.lower():
-        m = re.search(r"## Market insight\s*\n+([\s\S]*?)(?=\n## |\Z)", brief, re.I)
-        if m and not market:
-            market = m.group(1).strip()
-
-    routing = str(channel or report.get("routing_decision") or "residential").capitalize()
-    passed = not result.get("rejected") and result.get("status") != "review"
-    title = f"{routing} - {'Passed' if passed else 'Review'}"
-
-    summary = _first_sentence(description) if description else _first_sentence(
-        f"{rooms or '—'}-bedroom {ptype} in {loc}. "
-        f"{', '.join(features[:3]) if features else ''} "
-        f"Asking {_format_price(price)}."
-    )
-
-    return {
-        "title": title,
-        "summary": summary,
-        "property_type": ptype,
-        "routing_label": f"{ptype} · {routing}",
-        "location": loc,
-        "price_display": _format_price(price),
-        "rooms": rooms if rooms is not None else "—",
-        "confidence_pct": confidence_pct,
-        "key_features": features,
-        "image_scores": scores,
-        "similar_listings": similar_text,
-        "market_insight": market,
-        "analyst_notes": notes,
-        "agent_name": result.get("agent_name"),
-    }
-
-
-def render_triage_report(
-    result: dict,
-    *,
-    description: str = "",
-    image_urls: list[str] | None = None,
-    agent_name: str = "",
-) -> None:
-    import streamlit as st
-
-    if agent_name:
-        result = {**result, "agent_name": agent_name}
-    view = normalize_result(result, description=description, image_urls=image_urls)
-
-    st.markdown(f"## {view['title']}")
-    st.markdown(view["summary"])
-    st.markdown("✅ **Report received.**")
-
-    st.markdown(
-        f'<div style="{BANNER_STYLE}">'
-        f'<div style="font-size:1.25em;font-weight:700;">🏠 {view["routing_label"]}</div>'
-        f'<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:20px;">'
-        f'<span><b>Location</b><br>{view["location"]}</span>'
-        f'<span><b>Price</b><br>{view["price_display"]}</span>'
-        f'<span><b>Rooms</b><br>{view["rooms"]}</span>'
-        f'<span><b>Report confidence</b><br>{view["confidence_pct"]}%</span>'
-        f"</div></div>",
-        unsafe_allow_html=True,
-    )
-
-    if view["key_features"]:
-        st.markdown(f'<div style="{SECTION_STYLE}">Key features:</div>', unsafe_allow_html=True)
-        for feat in view["key_features"]:
-            st.markdown(f"- {feat}")
-
-    if view["image_scores"]:
-        st.markdown(f'<div style="{SECTION_STYLE}">Image analysis:</div>', unsafe_allow_html=True)
-        for img in view["image_scores"]:
-            if not isinstance(img, dict):
-                continue
-            room = str(img.get("room_type", "other")).title()
-            try:
-                score = float(img.get("condition_score", 3))
-            except (TypeError, ValueError):
-                score = 3.0
-            st.markdown(f"**{room}:** {_stars(score)}")
-
-    if view["similar_listings"]:
-        st.markdown(
-            f'<div style="{SECTION_STYLE}">Similar past listings:</div>',
-            unsafe_allow_html=True,
-        )
-        for line in view["similar_listings"]:
-            st.markdown(f"- {line}")
-
-    if view["market_insight"]:
-        st.markdown(f'<div style="{SECTION_STYLE}">Market insight:</div>', unsafe_allow_html=True)
-        st.markdown(view["market_insight"])
-
-    if view["analyst_notes"]:
-        st.markdown(f'<div style="{SECTION_STYLE}">Analyst notes:</div>', unsafe_allow_html=True)
-        st.markdown(view["analyst_notes"])
-
-    with st.expander("Raw pipeline JSON"):
-        st.json(result)
+    # ── RAG Insight ───────────────────────────────────────────────────
+    if rag_insight := report.get("rag_insight"):
+        st.markdown("### RAG Insight")
+        st.markdown(f'<div class="rag-box">💡 {rag_insight}</div>', unsafe_allow_html=True)

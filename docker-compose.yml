@@ -5,7 +5,11 @@ services:
       - "8001:8001"
     volumes:
       - ./src/services/rag_service/chroma_db:/app/chroma_db
+      # On EC2: uncomment to mount pre-downloaded model (avoids re-download on every start)
+      # - ~/models:/models
     env_file: .env
+    environment:
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
 
   image_analyser:
     build: ./src/services/image_analyser
