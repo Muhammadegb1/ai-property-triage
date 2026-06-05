@@ -32,7 +32,7 @@ The system processes property listing submissions through a four-layer pipeline:
 1. A listing agent submits a description and property images via the **WebUI**
 2. **n8n** orchestrates the flow — validating input, extracting structured fields, and calling AI services
 3. Four **FastAPI microservices on AWS EC2** handle RAG retrieval, image analysis, guardrails, and agent reasoning
-4. **External LLMs** (OpenAI GPT-4o-mini, Google Gemini) power the extraction and synthesis nodes
+4. **External LLMs** (OpenAI GPT-4o-min) power the extraction and synthesis nodes
 
 The result is a structured triage report with property type, condition scores, similar listings, and a market insight — routed to the correct team (residential or commercial).
 
@@ -107,7 +107,7 @@ A form where listing agents submit property descriptions and image URLs. On subm
 
 ## Layer 2 — n8n Orchestration
 
-**Technology:** n8n · Google Gemini · OpenAI GPT-4o-mini
+**Technology:** n8n · OpenAI GPT-4o-mini
 
 The n8n workflow (`src/n8n/AI_Property_Triage_n8n.json`) is the central pipeline coordinator.
 
@@ -116,7 +116,7 @@ The n8n workflow (`src/n8n/AI_Property_Triage_n8n.json`) is the central pipeline
 | 1 — Webhook Trigger | Receives `{description, image_urls, agent_name}` from WebUI |
 | 2 — Guardrails Input Check | POSTs to EC2 guardrails service; blocks spam and off-topic input |
 | 3 — IF Router | Branches: rejection path or processing path |
-| 4 — Information Extractor | LLM node (Gemini) extracts structured fields from listing text |
+| 4 — Information Extractor | LLM node extracts structured fields from listing text |
 | 5 — AI Agent | Calls LangGraph Agent service; orchestrates RAG + image analysis |
 | 6 — Guardrails Output Check | Validates generated report for false claims |
 | 7 — Output Router | Routes to human review if flagged |
@@ -214,7 +214,7 @@ Planner → Tool Executor → Synthesiser → END
 
 | Purpose | Model | Used By |
 |---------|-------|---------|
-| Information extraction | Google Gemini Flash | n8n Node 4 |
+| Information extraction | OpenAI GPT-4o-mini | n8n Node 4 |
 | Agent orchestration | OpenAI GPT-4o-mini | n8n Node 5 |
 | Guardrail evaluation | OpenAI GPT-4o-mini | Guardrails Service |
 | Agent synthesis | OpenAI GPT-4o-mini | LangGraph Agent |
@@ -235,7 +235,7 @@ WebUI POSTs {description, image_urls, agent_name}
 n8n Node 2: Guardrails Input Check
      │ BLOCKED → Return 422 rejection to WebUI
      │ PASS ↓
-n8n Node 4: Information Extractor (Gemini)
+n8n Node 4: Information Extractor (openai)
      │ → property_type, location, price_ils, num_rooms, key_features
      ▼
 n8n Node 5: AI Agent calls LangGraph Agent (EC2 :8004)
@@ -272,7 +272,6 @@ WebUI renders triage report
 - [Ollama](https://ollama.ai) installed locally with `llama3.1` pulled
 - n8n account (cloud or self-hosted)
 - OpenAI API key
-- Google Gemini API key
 - Tavily API key (optional, for web search in chat)
 - Pinecone account (optional, for cloud vector store)
 - AWS account with EC2 access (for production deployment)
@@ -290,7 +289,6 @@ Copy `.env.example` to `.env` and fill in your values.
 | `TAVILY_API_KEY` | — | No | Tavily web search API key |
 | `N8N_WEBHOOK_URL` | — | Yes | n8n webhook endpoint URL |
 | `REQUEST_TIMEOUT` | `300` | No | HTTP timeout in seconds |
-| `GOOGLE_API_KEY` | — | Yes | Google Gemini API key |
 | `OPENAI_API_KEY` | — | Yes | OpenAI API key |
 | `LLM_BACKEND` | `ollama` (local) / `llamacpp` (EC2) | Yes | `llamacpp` or `ollama` |
 | `GGUF_MODEL_PATH` | — | No | Path to GGUF file (auto-downloads if empty) |
