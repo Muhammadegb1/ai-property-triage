@@ -1,4 +1,4 @@
-# AI-Powered Real Estate Property Triage System
+<img width="1508" height="413" alt="image" src="https://github.com/user-attachments/assets/26b1829b-254f-4538-988d-26d0176bd875" /># AI-Powered Real Estate Property Triage System
 
 A production-grade, multi-layer AI system that automates the intake and evaluation of real estate property listings. The system validates submissions, classifies images, retrieves similar past listings, and produces structured triage reports — all orchestrated through a stateful AI pipeline.
 
@@ -85,8 +85,6 @@ A real-time chat interface powered by a locally running Ollama model (Llama 3.1)
 - Tavily failures are handled silently — Ollama responds from its own knowledge
 - Streams responses token-by-token with a live cursor
 
-![Assistant Tab](docs/screenshots/assistant_tab.png)
-
 ### Submission Tab
 
 A form where listing agents submit property descriptions and image URLs. On submission, the form POSTs to the n8n webhook and waits for the triage report. The returned report is rendered with:
@@ -96,10 +94,6 @@ A form where listing agents submit property descriptions and image URLs. On subm
 - **Image analysis cards:** Room type classification, condition score (1–5), confidence progress bar
 - **Similar listings:** Three comparable past listings from the agency archive
 - **RAG insight:** A market comparison paragraph citing specific listing IDs
-
-![Submission Tab](docs/screenshots/submission_tab.png)
-
-![Triage Report](docs/screenshots/triage_report.png)
 
 **Source:** `src/webui/`
 
@@ -124,7 +118,7 @@ The n8n workflow (`src/n8n/AI_Property_Triage_n8n.json`) is the central pipeline
 
 **Workflow file:** `src/n8n/AI_Property_Triage_n8n.json`
 
-![n8n Workflow](docs/screenshots/n8n_workflow.png)
+![n8n Workflow]<img width="1508" height="413" alt="image" src="https://github.com/user-attachments/assets/06a53f9d-53cf-411a-a861-c36aa469ed5f" />
 
 ---
 
