@@ -1,4 +1,4 @@
-# AI-Powered Real Estate Property Triage System
+<img width="1865" height="821" alt="image" src="https://github.com/user-attachments/assets/918adfe7-1ef4-4efb-9592-781617d4ea89" /># AI-Powered Real Estate Property Triage System
 
 A production-grade, multi-layer AI system that automates the intake and evaluation of real estate property listings. The system validates submissions, classifies images, retrieves similar past listings, and produces structured triage reports — all orchestrated through a stateful AI pipeline.
 
@@ -609,7 +609,7 @@ ai-property-triage/
 ## Screenshots
 
 ### WebUI — Assistant Tab
-![Assistant Tab](docs/screenshots/assistant_tab.png)
+![Assistant Tab](https://github.com/user-attachments/assets/b5f35517-7f05-444d-930b-a4e074e4cd15)
 
 ### WebUI — Submission Form
 ![Submission Tab](docs/screenshots/submission_tab.png)
