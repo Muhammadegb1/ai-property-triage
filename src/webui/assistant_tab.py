@@ -3,7 +3,7 @@ from __future__ import annotations
 import streamlit as st
 
 from config import OLLAMA_MODEL, OLLAMA_SYSTEM_PROMPT_FILE
-from ollama_client import OllamaError, chat_stream, health_check
+from ollama_client import OllamaError, chat_stream, health_check, is_real_estate_question, tavily_search
 
 
 def _load_system_prompt() -> str:
@@ -68,7 +68,21 @@ def render_assistant_tab() -> None:
                 unsafe_allow_html=True,
             )
 
-            api_messages = [{"role": "system", "content": _load_system_prompt()}]
+            system_prompt = _load_system_prompt()
+            if is_real_estate_question(pending):
+                reply_slot.markdown(
+                    _bot_bubble("🔍 &nbsp;<em>Searching web for latest data…</em>"),
+                    unsafe_allow_html=True,
+                )
+                web_context = tavily_search(pending)
+                if web_context:
+                    system_prompt += (
+                        f"\n\nCurrent web search results for the user's question:\n\n"
+                        f"{web_context}\n\n"
+                        f"Use the above results to provide accurate, up-to-date information."
+                    )
+
+            api_messages = [{"role": "system", "content": system_prompt}]
             api_messages += [
                 {"role": m["role"], "content": m["content"]}
                 for m in st.session_state.messages

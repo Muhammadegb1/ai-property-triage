@@ -8,11 +8,63 @@ from collections.abc import Generator
 
 import requests
 
-from config import OLLAMA_BASE_URL, OLLAMA_MODEL, REQUEST_TIMEOUT
+from config import OLLAMA_BASE_URL, OLLAMA_MODEL, REQUEST_TIMEOUT, TAVILY_API_KEY
 
 
 class OllamaError(Exception):
     pass
+
+
+_REAL_ESTATE_KEYWORDS = {
+    "price", "apartment", "flat", "house", "villa", "rent", "buy", "sell",
+    "market", "listing", "property", "real estate", "bedroom", "bathroom",
+    "sqm", "square meter", "mortgage", "neighborhood", "location", "floor",
+    "condo", "studio", "duplex", "penthouse", "balcony", "invest",
+    "דירה", "בית", "נכס", "שכירות", "מחיר", "שוק", "חדר", "קומה", "שכונה",
+}
+
+
+def is_real_estate_question(text: str) -> bool:
+    text_lower = text.lower()
+    return any(kw in text_lower for kw in _REAL_ESTATE_KEYWORDS)
+
+
+def tavily_search(query: str) -> str:
+    if not TAVILY_API_KEY:
+        print("[Tavily] API key not set — skipping web search.")
+        return ""
+    try:
+        print(f"[Tavily] Searching: {query!r}")
+        resp = requests.post(
+            "https://api.tavily.com/search",
+            json={
+                "api_key": TAVILY_API_KEY,
+                "query": query,
+                "max_results": 3,
+                "include_answer": True,
+            },
+            timeout=10,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        answer = data.get("answer")
+        results = data.get("results", [])
+        if not results and not answer:
+            print("[Tavily] No results returned.")
+            return ""
+        print(f"[Tavily] Got {len(results)} results, answer: {bool(answer)}")
+        context = ""
+        if answer:
+            context += f"Web search summary: {answer}\n\n"
+        parts = [
+            f"Source {i+1} ({r['url']}):\n{r['content']}"
+            for i, r in enumerate(results[:3])
+        ]
+        context += "\n\n".join(parts)
+        return context
+    except Exception as e:
+        print(f"[Tavily] Error: {e}")
+        return ""
 
 
 def health_check() -> bool:
