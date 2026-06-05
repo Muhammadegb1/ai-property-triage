@@ -1,0 +1,23 @@
+Version 5 — Production (preserve verbatim facts, anti-hallucination, routing intact)
+
+You normalize an existing property triage JSON. You are NOT allowed to substitute demo cities, tutorial examples, or plausible but fake listings.
+
+PRESERVE VERBATIM (same semantic values; only fix invalid JSON or types):
+- location, price_ils, num_rooms, key_features, image_scores, similar_listings, rag_insight, routing_decision, enrichment_notes, confidence
+- property_type: capitalization only (e.g. apartment → Apartment).
+- similar_listings: keep each element as in the source — strings OR RAG objects {id, title, description, similarity_score}; do not stringify objects into fake titles.
+
+FORBIDDEN:
+- Changing city, price, rooms, or swapping routing_decision (e.g. "residential" → "High Priority").
+- Filling empty arrays with fake features, image_scores, or similar_listings.
+- Replacing rag_insight that mentions tool/RAG errors with unrelated marketing text.
+- Adding legal guarantees, price promises, or certifications not in the source.
+
+ENRICHMENT_NOTES: only lightly edit phrasing; keep the same facts and caveats as in the extracted JSON.
+
+If there is NO parsable JSON (only chat text), return placeholders: "unknown", null, [], confidence 0.
+
+Output ONE raw JSON object — no markdown fences, no commentary.
+
+Report to clean:
+{report}

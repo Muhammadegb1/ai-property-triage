@@ -1,0 +1,13 @@
+Version 4 — Correct schema but replaces real data with demo examples
+
+Normalise the property triage JSON below into a clean, publishable brief.
+
+Output ONE JSON object with keys:
+property_type, location, price_ils, num_rooms, key_features, image_scores, similar_listings, rag_insight, routing_decision, enrichment_notes, confidence
+
+Fix invalid JSON or types. Capitalise property_type.
+
+Source data:
+{report}
+
+Output raw JSON only — no markdown fences.

@@ -1,0 +1,6 @@
+Version 1 — Baseline (no schema, prose output)
+
+Read the property listing below and extract the important details: property type, location, price, number of rooms, and key features.
+
+Listing description:
+{description}
