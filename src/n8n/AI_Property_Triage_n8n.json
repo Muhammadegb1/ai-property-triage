@@ -6,13 +6,13 @@
         "promptType": "define",
         "text": "={{ 'Listing description:\\n' + $('Node 1 - Webhook Trigger').item.json.body.description + '\\n\\nExtracted fields:\\n' + JSON.stringify($('Node 4b - Parse extracted JSON').item.json.output) + '\\n\\nImage URLs:\\n' + JSON.stringify($('Node 1 - Webhook Trigger').item.json.body.image_urls || []) }}",
         "options": {
-          "systemMessage": "You are a senior property analyst at a real estate triage platform.\n\nYou receive structured fields from the Information Extractor (Node 4):\n- description: full listing text\n- property_type, location, price_ils, num_rooms, key_features\n- image_urls: list of image URLs (may be empty)\n\nStep 1 — Call langgraph_agent EXACTLY ONCE.\nBuild the query by combining the description and image URLs into one string:\n\n\"Analyse this property listing and its images. Description: <description>. Image URLs: <comma-separated URLs or 'none'>\"\n\nlanggraph_agent will internally call the RAG service (similar listings) and the Image Analyser (room type + condition score per image) and return:\n- answer: free-text summary of findings\n- tools_used: which tools were called\n- reasoning_steps: step-by-step trace\n\nStep 2 — After langgraph_agent returns, produce ONLY the following JSON (no markdown, no commentary):\n\n{\n  \"property_type\": \"<from Node 4 extracted fields>\",\n  \"routing_decision\": \"residential\" | \"commercial\",\n  \"location\": \"<from Node 4 extracted fields>\",\n  \"price_ils\": <number or null>,\n  \"num_rooms\": <number or null>,\n  \"key_features\": [\"...\"],\n  \"rag_insight\": \"<full market insight from langgraph answer, including all property comparisons>\",\n  \"similar_listings\": [\n    { \"title\": \"<title>\", \"description\": \"<FULL description INCLUDING asking price>\", \"price_ils\": <number> }\n  ],\n  \"image_scores\": [\n    { \"url\": \"<image_urls[i]>\", \"room_type\": \"<from langgraph>\", \"condition_score\": <1-5>, \"confidence\": <0.0-1.0> }\n  ],\n  \"enrichment_notes\": \"<notable observations>\",\n  \"confidence\": <0.0-1.0>\n}\n\nCRITICAL:\n- similar_listings: include ALL listings mentioned in the langgraph answer — typically 3. Do not stop at 1.\n- image_scores: include ONE entry per image URL in image_urls. If N URLs were submitted, output N entries.\n- Do NOT invent any data not present in the extracted fields or langgraph answer.\n- If a field is missing or unclear, use null or [].\n- Output ONLY the JSON object — no explanation before or after.\n\nRouting rules:\n- residential → apartment, house, villa\n- commercial → office, retail, industrial",
+          "systemMessage": "You are a senior property analyst at a real estate triage platform.\n\nYou receive structured fields from the Information Extractor (Node 4):\n- description: full listing text\n- property_type, location, price_ils, num_rooms, key_features\n- image_urls: list of image URLs (may be empty)\n\nStep 1 — Call langgraph_agent EXACTLY ONCE.\nBuild the query by combining the description and image URLs into one string:\n\n\"Analyse this property listing and its images. Description: <description>. Image URLs: <comma-separated URLs or 'none'>\"\n\nlanggraph_agent will internally call the RAG service (similar listings) and the Image Analyser (room type + condition score per image) and return:\n- answer: free-text summary of findings\n- tools_used: which tools were called\n- reasoning_steps: step-by-step trace\n\nStep 2 — After langgraph_agent returns, produce ONLY the following JSON (no markdown, no commentary):\n\n{\n  \"property_type\": \"<from Node 4 extracted fields>\",\n  \"routing_decision\": \"residential\" | \"commercial\",\n  \"location\": \"<from Node 4 extracted fields>\",\n  \"price_ils\": <number or null>,\n  \"num_rooms\": <number or null>,\n  \"key_features\": [\"...\"],\n  \"rag_insight\": \"<full market insight from langgraph answer, including all property comparisons>\",\n  \"similar_listings\": [\n    { \"title\": \"<title of listing 1>\", \"description\": \"<FULL description of listing 1 INCLUDING the asking price sentence>\", \"price_ils\": <asking price as number e.g. 4200000> },\n    { \"title\": \"<title of listing 2>\", \"description\": \"<FULL description of listing 2 INCLUDING the asking price sentence>\", \"price_ils\": <asking price as number> },\n    { \"title\": \"<title of listing 3>\", \"description\": \"<FULL description of listing 3 INCLUDING the asking price sentence>\", \"price_ils\": <asking price as number> }\n  ],\n  \"image_scores\": [\n    include one entry for EVERY url in image_urls — if 5 URLs submitted output 5 entries, if 2 submitted output 2 entries\n    { \"url\": \"<image_urls[i]>\", \"room_type\": \"<from langgraph answer>\", \"condition_score\": <1-5>, \"confidence\": <0.0-1.0> }\n  ],\n  \"enrichment_notes\": \"<any notable observations from the analysis>\",\n  \"confidence\": <0.0–1.0 — your confidence in the routing decision>\n}\n\nCRITICAL:\n- similar_listings: include ALL listings mentioned in the langgraph answer — typically 3. Do not stop at 1.\n- image_scores: include ONE entry per image URL in image_urls — if N URLs were submitted, output N entries. Match each image_urls[i] to its corresponding analysis result from the langgraph answer.\n\nRouting rules:\n- residential → apartment, house, villa\n- commercial → office, retail, industrial\n\nConstraints:\n- Do NOT invent any data not present in the extracted fields or langgraph answer.\n- If a field is missing or unclear, use null or [].\n- Output ONLY the JSON object — no explanation before or after.",
           "maxIterations": 6,
           "returnIntermediateSteps": false
         }
       },
       "id": "575e79bf-1f5d-45db-abcd-d9dadc83ab7d",
-      "name": "Node 5 - AI Agent",
+      "name": "Node 5 â AI Agent",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 2,
       "position": [
@@ -24,7 +24,7 @@
       "parameters": {
         "toolDescription": "Runs a multi-step LangGraph agent that internally calls the RAG service and Image Analyser. Send a single 'query' string describing what you need to analyse about the property listing. Example: 'Analyse this property listing and its images: <description>. Image URLs: <urls>'.",
         "method": "POST",
-        "url": "http://host.docker.internal:8004/agent/run",
+        "url": "http://100.30.173.219:8004/agent/run",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "{\"query\": \"{query}\"}",
@@ -49,7 +49,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://host.docker.internal:8003/check/input",
+        "url": "http://100.30.173.219:8003/check/input",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -148,7 +148,7 @@
     },
     {
       "parameters": {
-        "prompt": "={{ 'You extract structured fields from a real-estate listing description. Reply with one JSON object only, no markdown, no triple-backtick code fences, no text before or after the JSON.\n\nUse exactly these keys and types:\n- property_type (string): apartment | house | villa | office | retail | industrial | other\n- location (string): city or neighbourhood as stated\n- price_ils (number or null): asking price in ILS; null if not mentioned\n- num_rooms (number or null): integer room count; null if not mentioned\n- key_features (array of strings): up to 5 short strings; [] if none\n- certifications (string): energy ratings etc., or empty string if none\n\nRules:\n- Extract only facts explicitly stated in the listing text.\n- If a field is not mentioned, use null (for numbers), \"\" (for certifications), or [] (for key_features).\n- Do not infer price from vague phrases like \"negotiable\" unless a number is given.\n- Normalise room counts to integers (e.g. \"5-bedroom\" → 5).\\n\\nListing description:\\n' + $('Node 1 - Webhook Trigger').item.json.body.description + '\\n\\nRespond with JSON only.' }}"
+        "prompt": "={{ 'You extract structured fields from a real-estate listing description. Reply with one JSON object only, no markdown, no triple-backtick code fences, no text before or after the JSON.\\n\\nUse exactly these keys and types:\\n- property_type (string): apartment | house | villa | office | retail | industrial | other\\n- location (string): city or neighbourhood as stated\\n- price_ils (number or null): asking price in ILS; null if not mentioned\\n- num_rooms (number or null): integer room count; null if not mentioned\\n- key_features (array of strings): up to 5 short strings; [] if none\\n- certifications (string): energy ratings etc., or empty string if none\\n\\nListing description:\\n' + $('Node 1 - Webhook Trigger').item.json.body.description + '\\n\\nRespond with JSON only.' }}"
       },
       "id": "028f0b26-22a0-49a6-beda-80adf5244dc4",
       "name": "Node 4 Extract listing (LLM)",
@@ -194,7 +194,7 @@
     },
     {
       "parameters": {
-        "prompt": "=You normalize an existing property triage JSON. You are NOT allowed to substitute demo cities, tutorial examples, or plausible but fake listings.\n\nPRESERVE VERBATIM (same semantic values; only fix invalid JSON or types):\n- location, price_ils, num_rooms, key_features, image_scores, similar_listings, rag_insight, routing_decision, enrichment_notes, confidence\n- property_type: capitalization only (e.g. apartment → Apartment).\n- similar_listings: keep each element as in the source — strings OR RAG objects {id, title, description, similarity_score}; do not stringify objects into fake titles.\n\nFORBIDDEN:\n- Changing city, price, rooms, or swapping routing_decision (e.g. \"residential\" → \"High Priority\").\n- Filling empty arrays with fake features, image_scores, or similar_listings.\n- Replacing rag_insight that mentions tool/RAG errors with unrelated marketing text.\n- Adding legal guarantees, price promises, or certifications not in the source.\n\nENRICHMENT_NOTES: only lightly edit phrasing; keep the same facts and caveats as in the extracted JSON.\n\nIf there is NO parsable JSON (only chat text), return placeholders: \"unknown\", null, [], confidence 0.\n\nOutput ONE raw JSON object — no markdown fences, no commentary.\n\nReport to clean:\n{{ $json.output }}"
+        "prompt": "=You normalize an existing property triage JSON. You are NOT allowed to substitute demo cities, tutorial examples, or plausible but fake listings.\n\nPRESERVE VERBATIM (same semantic values; only fix invalid JSON or types):\n- location, price_ils, num_rooms, key_features, image_scores, similar_listings, rag_insight, routing_decision, enrichment_notes, confidence\n- property_type: capitalization only (e.g. apartment â Apartment).\n- similar_listings: keep each element as in the source â strings OR RAG objects {id, title, description, similarity_score}; do not stringify objects into fake titles.\n\nFORBIDDEN:\n- Changing city, price, rooms, or swapping routing_decision (e.g. \"residential\" â \"High Priority\").\n- Filling empty arrays with fake features, image_scores, or similar_listings.\n- Replacing rag_insight that mentions tool/RAG errors with unrelated marketing text.\n\nENRICHMENT_NOTES: only lightly edit phrasing; keep the same facts and caveats as in the extracted JSON.\n\nIf there is NO parsable JSON (only chat text), return placeholders: \"unknown\", null, [], confidence 0.\n\nOutput ONE raw JSON object â no markdown fences, no commentary.\n\nReport to clean:\n{{ $json.output }}\n"
       },
       "id": "d7a35f50-9cb3-4ad6-b204-30d8e74b377b",
       "name": "Node 6 - Final Report LLM Chain",
@@ -241,7 +241,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://host.docker.internal:8003/check/output",
+        "url": "http://100.30.173.219:8003/check/output",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -425,49 +425,6 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "={{ String($env.HUMAN_REVIEW_WEBHOOK_URL || 'http://127.0.0.1:9090').trim().replace(/\\/+$/, '').replace(/\\s+/g, '') + '/review' }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "report",
-              "value": "={{ JSON.stringify($('Node 6b - Parse report JSON').item.json) }}"
-            },
-            {
-              "name": "flag_reason",
-              "value": "={{ $('Node 7 - Guardrails Output Check').item.json.reason }}"
-            },
-            {
-              "name": "agent_name",
-              "value": "={{ $('Node 1 - Webhook Trigger').item.json.body.agent_name }}"
-            }
-          ]
-        },
-        "options": {
-          "timeout": 15000
-        }
-      },
-      "id": "0d36866d-d8c7-496a-b7c4-adaa1092c572",
-      "name": "Node 7c - Human Review Webhook",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        -496,
-        432
-      ]
-    },
-    {
-      "parameters": {
         "httpMethod": "POST",
         "path": "property-triage",
         "responseMode": "responseNode",
@@ -486,11 +443,22 @@
   ],
   "pinData": {},
   "connections": {
+    "Node 5 â AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Node 6 - Final Report LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "langgraph_agent": {
       "ai_tool": [
         [
           {
-            "node": "Node 5 - AI Agent",
+            "node": "Node 5 â AI Agent",
             "type": "ai_tool",
             "index": 0
           }
@@ -552,7 +520,7 @@
       "main": [
         [
           {
-            "node": "Node 5 - AI Agent",
+            "node": "Node 5 â AI Agent",
             "type": "main",
             "index": 0
           }
@@ -563,7 +531,7 @@
       "ai_languageModel": [
         [
           {
-            "node": "Node 5 - AI Agent",
+            "node": "Node 5 â AI Agent",
             "type": "ai_languageModel",
             "index": 0
           }
@@ -660,25 +628,14 @@
           }
         ]
       ]
-    },
-    "Node 5 - AI Agent": {
-      "main": [
-        [
-          {
-            "node": "Node 6 - Final Report LLM Chain",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
     }
   },
-  "active": true,
+  "active": false,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "c8cd52ea-12e7-4c57-8a69-e7b22611dadf",
+  "versionId": "67b8146b-e8f1-4f9e-a8d5-11a77aacb826",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "9320feb085f0f947fffade4fb27086e3b987e7353c971691b83e22f47de4ec41"
