@@ -159,7 +159,7 @@ The backbone is frozen (ImageNet pretrained). Only the two classifier heads were
 
 **Source:** `src/services/image_analyser/`
 
-![Image Analyser Results](docs/screenshots/image_analyser.png)
+![Image Analyser Results](https://github.com/user-attachments/assets/5409570d-b9ad-4cca-abfd-40f04e61e8e4)
 
 ---
 
