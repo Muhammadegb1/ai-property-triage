@@ -119,6 +119,7 @@ The n8n workflow (`src/n8n/AI_Property_Triage_n8n.json`) is the central pipeline
 **Workflow file:** `src/n8n/AI_Property_Triage_n8n.json`
 
 ![n8n Workflow](https://github.com/user-attachments/assets/06a53f9d-53cf-411a-a861-c36aa469ed5f)
+
 ---
 
 ## Layer 3 — EC2 Microservices
