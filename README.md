@@ -633,10 +633,10 @@ ai-property-triage/
 
 
 ### WebUI — Triage Report (Successful Submission)
-![Triage Report](docs/screenshots/triage_report_success.png)
+![Triage Report](https://github.com/user-attachments/assets/d5644b78-bbcd-4dcc-8b58-63638aae7fa0)
 
 ### WebUI — Triage Report (Input Guardrail Rejection)
-![Guardrail Rejection](docs/screenshots/triage_report_rejected.png)
+![Guardrail Rejection](https://github.com/user-attachments/assets/f96e3e7b-10b9-4045-90ad-4efd272216da)
 
 ### WebUI — Triage Report (Output Guardrail Human Review)
 ![Human Review](docs/screenshots/triage_report_human_review.png)
