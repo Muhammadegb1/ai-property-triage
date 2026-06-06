@@ -627,7 +627,10 @@ ai-property-triage/
 ![Assistant Tab](docs/screenshots/assistant_tab.png)
 
 ### WebUI — Submission Form
-![Submission Tab](docs/screenshots/submission_tab.png)
+![Submission Tab](https://github.com/user-attachments/assets/385473ff-9a10-43b8-b6bb-320c8b39b27f")
+![Submission Tab](https://github.com/user-attachments/assets/01c1b456-b9ec-4855-acd3-fc6237c1bafd")
+
+
 
 ### WebUI — Triage Report (Successful Submission)
 ![Triage Report](docs/screenshots/triage_report_success.png)
