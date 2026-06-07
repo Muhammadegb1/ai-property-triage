@@ -638,17 +638,9 @@ ai-property-triage/
 ### WebUI — Triage Report (Input Guardrail Rejection)
 ![Guardrail Rejection](https://github.com/user-attachments/assets/f96e3e7b-10b9-4045-90ad-4efd272216da)
 
-### WebUI — Triage Report (Output Guardrail Human Review)
-![Human Review](docs/screenshots/triage_report_human_review.png)
-
 ### n8n Workflow
-![n8n Flow](docs/screenshots/n8n_workflow.png)
+![n8n Flow](https://github.com/user-attachments/assets/72bbea2b-fe13-42f2-862f-fc60a92b781c)
 
 ### EC2 Services Running
-![Docker PS](docs/screenshots/ec2_docker_ps.png)
+![Docker PS](https://github.com/user-attachments/assets/3bd7cc7c-18ba-4083-a678-08d434236ae5)
 
-### Image Analysis Cards
-![Image Analysis](docs/screenshots/image_analysis_cards.png)
-
-### Similar Listings Section
-![Similar Listings](docs/screenshots/similar_listings.png)
